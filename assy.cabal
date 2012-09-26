@@ -1,0 +1,26 @@
+Name:               assy
+Version:            1.0
+Description:        Haskell Ants AI
+Author:             Thibault Duplessis
+Maintainer:         github.com/ornicar
+Build-Type:         Simple
+Cabal-Version:      >=1.8
+
+library
+  exposed-modules:  Ants
+  hs-source-dirs:   ./
+  ghc-options:      -O2
+  ghc-prof-options: -prof -caf-all -auto-all
+  build-depends:    base >= 4,
+                    containers >= 0.4,
+                    time,
+                    array
+
+executable MyBot
+  main-is:          MyBot.hs
+  ghc-options:      -O2
+  ghc-prof-options: -prof -caf-all -auto-all
+  Build-Depends:    base >= 4,
+                    time,
+                    array,
+                    assy

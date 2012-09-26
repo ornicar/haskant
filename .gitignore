@@ -1,0 +1,6 @@
+*.hi
+*.o
+MyBot
+/dist
+/logs/*
+/tools
