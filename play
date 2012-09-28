@@ -8,7 +8,7 @@
   --turns 100 \
   --map_file tools/maps/maze/maze_04p_01.map \
   "$@" \
-  "/home/thib/aichallenge/assy/dist/build/MyBot/MyBot" \
+  "/home/thib/aichallenge/haskant/dist/build/MyBot/MyBot" \
   "python tools/sample_bots/python/LeftyBot.py" \
   "python tools/sample_bots/python/HunterBot.py" \
   "python tools/sample_bots/python/GreedyBot.py"

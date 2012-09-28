@@ -1,4 +1,4 @@
-Name:               assy
+Name:               haskant
 Version:            1.0
 Description:        Haskell Ants AI
 Author:             Thibault Duplessis
@@ -23,4 +23,4 @@ executable MyBot
   Build-Depends:    base >= 4,
                     time,
                     array,
-                    assy
+                    haskant
