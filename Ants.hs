@@ -25,8 +25,8 @@ module Ants
 
 import Data.Array
 import Data.List (isPrefixOf)
-import Data.Char (digitToInt, toUpper)
-import Data.Maybe (fromJust)
+import Data.Char (toUpper, digitToInt)
+import Data.Maybe (fromJust, fromMaybe, mapMaybe)
 import Control.Applicative
 import Data.Time.Clock
 import System.IO
@@ -122,10 +122,10 @@ data GameParams = GameParams
 
 --------------- Tile functions -------------------
 isAnt :: Tile -> Bool
-isAnt t = any (==t) [MyTile .. Enemy3Tile]
+isAnt t = t `elem` [MyTile .. Enemy3Tile]
 
-renderTile :: MetaTile -> String
-renderTile m 
+_renderTile :: MetaTile -> String
+_renderTile m 
   | tile m == MyTile = visibleUpper m 'm'
   | tile m == Enemy1Tile = visibleUpper m 'a'
   | tile m == Enemy2Tile = visibleUpper m 'b'
@@ -141,34 +141,34 @@ renderTile m
       | visible mt = [toUpper c]
       | otherwise  = [c]
       
-renderWorld :: World -> String
-renderWorld w = concatMap renderAssoc (assocs w)
+_renderWorld :: World -> String
+_renderWorld w = concatMap renderAssoc (assocs w)
   where
     maxCol = colBound w
     renderAssoc :: (Point, MetaTile) -> String
     renderAssoc a 
-      | col (fst a) == maxCol = renderTile (snd a) ++ "\n"
-      | otherwise = renderTile (snd a)
+      | col (fst a) == maxCol = _renderTile (snd a) ++ "\n"
+      | otherwise = _renderTile (snd a)
 
 modDistance :: Int -> Int -> Int -> Int
 modDistance n x y = min ((x - y) `mod` n) ((y - x) `mod` n)
 
-manhattan :: Point -- bound
+_manhattan :: Point -- bound
           -> Point -> Point -> Int
-manhattan bound p1 p2 = 
+_manhattan bound p1 p2 = 
   let rowd = modDistance (row bound + 1) (row p1) (row p2)
       cold = modDistance (col bound + 1) (col p1) (col p2)
   in rowd + cold
 
-oneNorm :: Point -> Int
-oneNorm p = row p + col p
+_oneNorm :: Point -> Int
+_oneNorm p = row p + col p
 
 twoNormSquared :: Point -> Int
 twoNormSquared p = row p ^ 2 + col p ^ 2
 
-euclidSquare :: Point  -- bound
+_euclidSquare :: Point  -- bound
              -> Point -> Point -> Int
-euclidSquare bound p1 p2 = 
+_euclidSquare bound p1 p2 = 
   let rowd = modDistance (row bound + 1) (row p1) (row p2)
       cold = modDistance (col bound + 1) (col p1) (col p2)
   in (rowd ^ 2) + (cold ^ 2)
@@ -217,8 +217,9 @@ finishTurn = do
   putStrLn "go"
   hFlush stdout
 
-tuplify2 :: [a] -> (a,a)
-tuplify2 [x,y] = (x,y)
+tuplify2 :: [a] -> Maybe (a,a)
+tuplify2 [x,y] = Just (x,y)
+tuplify2 _ = Nothing
 
 ownerToTile :: Owner -> Tile
 ownerToTile Me = MyTile
@@ -251,8 +252,8 @@ addVisible w vp p =
       vtuple pt = (w %!% pt, visibleMetaTile $ w %! pt)
   in w // map vtuple vis
 
-addAnt :: GameParams -> GameState -> Point -> Owner -> GameState
-addAnt gp gs p own = 
+addAnt :: GameParams -> GameState -> Owner -> Point -> GameState
+addAnt gp gs own p = 
   let newAnts   = Ant {point = p, owner = own}:ants gs
       newWorld' = if own == Me
                     then addVisible (world gs) (viewPoints gp) p
@@ -260,8 +261,8 @@ addAnt gp gs p own =
       newWorld  = newWorld' // [(p, MetaTile {tile = ownerToTile own, visible = True})]
   in GameState {world = newWorld, ants = newAnts, food = food gs, startTime = startTime gs}
 
-addDead :: GameParams -> GameState -> Point -> Owner -> GameState
-addDead gp gs p own =
+addDead :: GameParams -> GameState -> Owner -> Point -> GameState
+addDead gp gs own p =
   let newWorld' = if own == Me 
                     then addVisible (world gs) (viewPoints gp) p
                     else world gs
@@ -280,14 +281,17 @@ initialGameState gp time =
   in GameState {world = w, ants = [], food = [], startTime = time}
 
 updateGameState :: GameParams -> GameState -> String -> GameState
-updateGameState gp gs s
-  | "f" `isPrefixOf` s = addFood gs $ toPoint . tail $ s
-  | "w" `isPrefixOf` s = addWorldTile gs Water $ toPoint . tail $ s
-  | "a" `isPrefixOf` s = addAnt gp gs (toPoint . init . tail $ s) (toOwner . digitToInt . last $ s)
-  | "d" `isPrefixOf` s = addDead gp gs (toPoint . init . tail $ s) (toOwner . digitToInt . last $ s)
-  | otherwise = gs -- ignore line
+updateGameState gp gs s = fromMaybe gs $ updateGameStateMaybe gp gs s
+
+updateGameStateMaybe :: GameParams -> GameState -> String -> Maybe GameState
+updateGameStateMaybe gp gs s
+  | "f" `isPrefixOf` s = fmap (addFood gs) $ toPoint . tail $ s
+  | "w" `isPrefixOf` s = fmap (addWorldTile gs Water) $ toPoint . tail $ s
+  | "a" `isPrefixOf` s = fmap (addAnt gp gs $ toOwner . digitToInt . last $ s) $ toPoint . init . tail $ s
+  | "d" `isPrefixOf` s = fmap (addDead gp gs $ toOwner . digitToInt . last $ s) $ toPoint . init . tail $ s
+  | otherwise = Nothing -- ignore line
   where
-    toPoint :: String -> Point
+    toPoint :: String -> Maybe Point
     toPoint = tuplify2 . map read . words
 
 updateGame :: GameParams -> GameState -> IO GameState
@@ -315,8 +319,8 @@ visibleMetaTile m
   | tile m == Unknown = MetaTile {tile = Land, visible = True}
   | otherwise         = MetaTile {tile = tile m, visible = True}
 
-fAnd :: a -> [a -> Bool] -> Bool
-fAnd x = all ($x)
+_fAnd :: a -> [a -> Bool] -> Bool
+_fAnd x = all ($x)
 
 fOr :: a -> [a -> Bool] -> Bool
 fOr x = any ($x)
@@ -398,7 +402,7 @@ gameLoop gp gs doTurn = do
           let gsc = cleanState gs
           gsu <- updateGame gp gsc
           orders <- doTurn gp gsu
-          hPutStrLn stderr $ show orders
+          hPrint stderr orders
           mapM_ issueOrder orders
           finishTurn
           gameLoop gp gsu doTurn
@@ -408,7 +412,7 @@ gameLoop gp gs doTurn = do
 game :: (GameParams -> GameState -> IO [Order]) -> IO ()
 game doTurn = do
   paramInput <- gatherParamInput
-  let gp = createParams $ map (tuplify2 . words) paramInput
+  let gp = createParams $ mapMaybe (tuplify2 . words) paramInput
   currentTime <- getCurrentTime
   let gs = initialGameState gp currentTime
   finishTurn -- signal done with setup
