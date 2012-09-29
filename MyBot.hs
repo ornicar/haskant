@@ -23,11 +23,9 @@ generateOrders a = map (Order a) [North .. West]
  - GameState holds data that changes between each turn
  - for each see Ants module for more information
  -}
-doTurn :: GameParams -> GameState -> IO [Order]
-doTurn _ gs = do 
-  let generatedOrders = map generateOrders $ myAnts $ ants gs 
-      orders = mapMaybe (tryOrder (world gs)) generatedOrders 
-  return orders
+doTurn :: GameParams -> GameState -> [Order]
+doTurn _ gs = mapMaybe (tryOrder (world gs)) generatedOrders 
+  where generatedOrders = map generateOrders $ myAnts $ ants gs 
 
 -- | This runs the game
 main :: IO ()

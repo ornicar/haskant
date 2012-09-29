@@ -352,7 +352,7 @@ endGame = do
   -- TODO print 
 
 gameLoop :: GameParams -> GameState
-         -> (GameParams -> GameState -> IO [Order])
+         -> (GameParams -> GameState -> [Order])
          -> IO ()
 gameLoop gp gs doTurn = do
   line <- getLine
@@ -363,7 +363,7 @@ gameLoop gp gs doTurn = do
           hPutStrLn stderr line
           let gsc = cleanState gs
           gsu <- updateGame gp gsc
-          orders <- doTurn gp gsu
+          let orders = doTurn gp gsu
           mapM_ issueOrder orders
           finishTurn
           gameLoop gp gsu doTurn
@@ -373,7 +373,7 @@ gameLoop gp gs doTurn = do
 _debug :: Show a => a -> a
 _debug a = trace (show a) a
 
-game :: (GameParams -> GameState -> IO [Order]) -> IO ()
+game :: (GameParams -> GameState -> [Order]) -> IO ()
 game doTurn = do
   paramInput <- gatherParamInput
   let gp = createParams $ mapMaybe (tuplify2 . words) paramInput
