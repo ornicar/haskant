@@ -20,7 +20,7 @@ executable MyBot
   main-is:          MyBot.hs
   ghc-options:      -O2
   ghc-prof-options: -prof -caf-all -auto-all
-  Build-Depends:    base >= 4,
+  build-depends:    base >= 4,
                     time,
                     array,
                     haskant

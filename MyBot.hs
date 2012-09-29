@@ -2,7 +2,7 @@ module Main where
 
 import Data.List
 import Data.Maybe (mapMaybe)
-import System.IO
+-- import System.IO
 
 import Ants
 
@@ -24,19 +24,11 @@ generateOrders a = map (Order a) [North .. West]
  - for each see Ants module for more information
  -}
 doTurn :: GameParams -> GameState -> IO [Order]
-doTurn _ gs = do
-  -- generate orders for all ants belonging to me
-  let generatedOrders = map generateOrders $ myAnts $ ants gs
-  -- for each ant take the first "passable" order, if one exists
-      orders = mapMaybe (tryOrder (world gs)) generatedOrders
-  -- this shows how to check the remaining time
-  elapsedTime <- timeRemaining gs
-  hPrint stderr elapsedTime
-  -- wrap list of orders back into a monad
+doTurn _ gs = do 
+  let generatedOrders = map generateOrders $ myAnts $ ants gs 
+      orders = mapMaybe (tryOrder (world gs)) generatedOrders 
   return orders
 
 -- | This runs the game
 main :: IO ()
 main = game doTurn
-
--- vim: set expandtab:
