@@ -13,14 +13,17 @@ library
   ghc-prof-options: -prof -caf-all -auto-all
   build-depends:    base >= 4,
                     containers >= 0.4,
-                    time,
-                    array
+                    array,
+                    fgl,
+                    astar
 
 executable MyBot
   main-is:          MyBot.hs
   -- ghc-options:      -O2
   ghc-prof-options: -prof -caf-all -auto-all
   build-depends:    base >= 4,
-                    time,
+                    containers >= 0.4,
                     array,
+                    fgl,
+                    astar,
                     haskant
