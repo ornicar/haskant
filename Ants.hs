@@ -66,7 +66,6 @@ data Tile = MyTile
           | Enemy1Tile 
           | Enemy2Tile 
           | Enemy3Tile 
-          | Dead 
           | Land 
           | FoodTile 
           | Water 
@@ -230,14 +229,6 @@ addAnt gp gs own p =
       newWorld  = newWorld' // [(p, MetaTile {tile = ownerToTile own, visible = True})]
   in GameState {world = newWorld, ants = newAnts, food = food gs}
 
-addDead :: GameParams -> GameState -> Owner -> Point -> GameState
-addDead gp gs own p =
-  let newWorld' = if own == Me 
-                    then addVisible (world gs) (viewPoints gp) p
-                    else world gs
-      newWorld = newWorld' // [(p, MetaTile {tile = Dead, visible = True})]
-  in GameState {world = newWorld, ants = ants gs, food = food gs}
-
 -- if replacing a visible tile it should be kept visible
 addWorldTile :: GameState -> Tile -> Point -> GameState
 addWorldTile gs t p =
@@ -257,7 +248,6 @@ updateGameStateMaybe gp gs s
   | "f" `isPrefixOf` s = fmap (addFood gs) $ toPoint . tail $ s
   | "w" `isPrefixOf` s = fmap (addWorldTile gs Water) $ toPoint . tail $ s
   | "a" `isPrefixOf` s = fmap (addAnt gp gs $ toOwner . digitToInt . last $ s) $ toPoint . init . tail $ s
-  | "d" `isPrefixOf` s = fmap (addDead gp gs $ toOwner . digitToInt . last $ s) $ toPoint . init . tail $ s
   | otherwise = Nothing -- ignore line
   where
     toPoint :: String -> Maybe Point
@@ -266,6 +256,7 @@ updateGameStateMaybe gp gs s
 updateGame :: GameParams -> GameState -> IO GameState
 updateGame gp gs = do
   line <- getLine
+  hPrint stderr line
   process line
   where 
     process line
@@ -296,8 +287,8 @@ fOr x = any ($x)
 -- and makes the tile invisible
 clearMetaTile :: MetaTile -> MetaTile
 clearMetaTile m 
-  | fOr (tile m) [isAnt, (==FoodTile), (==Dead)] = MetaTile {tile = Land, visible = False}
-  | otherwise = MetaTile {tile = tile m, visible = False}
+  | fOr (tile m) [isAnt, (==FoodTile)] = MetaTile {tile = Land, visible = False}
+  | otherwise = m {visible = False}
 
 -- Clears ants and food and sets tiles to invisible
 cleanState :: GameState -> GameState
