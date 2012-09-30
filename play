@@ -2,7 +2,7 @@
 
 turns=${1:-3}
 
-./tools/playgame.py \
+./vistools/playgame.py \
   --player_seed 42 \
   --end_wait=0.25 \
   --log_dir logs \
@@ -10,9 +10,10 @@ turns=${1:-3}
   --log_error \
   --log_stderr \
   --turns $turns \
-  --nolaunch \
   --map_file tools/maps/maze/maze_04p_01.map \
   "/home/thib/haskant/dist/build/MyBot/MyBot" \
   "python tools/sample_bots/python/LeftyBot.py" \
   "python tools/sample_bots/python/HunterBot.py" \
-  "python tools/sample_bots/python/GreedyBot.py"
+  "python tools/sample_bots/python/GreedyBot.py" 
+
+  # --nolaunch \
