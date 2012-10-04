@@ -8,7 +8,7 @@ module Tore
   , toreBound
   , (%!)
   , (%!%)
-  , toreNeighbors
+  , pointNeighbors
   , manhattan
   , euclidSquare
   , closeBy
@@ -45,8 +45,8 @@ toreBound = snd . bounds
         ixCol  = col p `mod` modCol
         ixRow  = row p `mod` modRow
 
-toreNeighbors :: Tore a -> Point -> [Point]
-toreNeighbors w (r,c) = (w %!%) <$> [(r - 1, c), (r, c - 1), (r + 1, c), (r, c + 1)]
+pointNeighbors :: Tore a -> Point -> [Point]
+pointNeighbors w (r,c) = (w %!%) <$> [(r - 1, c), (r, c - 1), (r + 1, c), (r, c + 1)]
 
 modDistance :: Int -> Int -> Int -> Int
 modDistance n x y = min ((x - y) `mod` n) ((y - x) `mod` n)

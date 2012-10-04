@@ -1,7 +1,7 @@
 module Main where
 
 import Ants (game)
-import Ai
+import Ai (doTurn)
 import Algo
 
 main :: IO ()

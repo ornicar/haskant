@@ -8,37 +8,9 @@ import           Data.Maybe          (fromJust, fromMaybe, mapMaybe)
 import           Debug.Trace
 import           System.IO
 
+import           Protocol
 import           Tore
 import           World
-
--- Representation of an order
-data Order = Order
-  { ant       :: Ant
-  , direction :: Direction
-  } deriving (Show)
-
-data GameState = GameState
-  { world :: World
-  , ants  :: [Ant]
-  , food  :: [Point]
-  } deriving (Show)
-
-data GameParams = GameParams
-  { rows          :: Int
-  , cols          :: Int
-  , viewradius2   :: Int
-  , attackradius2 :: Int
-  , spawnradius2  :: Int
-  , viewPoints    :: [Point]
-  } deriving (Show)
-
-antPoint :: Ant -> Point
-antPoint (Ant p _) = p
-
-passable :: World -> Order -> Bool
-passable w order =
-  let newPoint = move (direction order) (antPoint $ ant order)
-  in  content (w %! newPoint) /= Water
 
 issueOrder :: Order -> String
 issueOrder order = do
@@ -165,7 +137,7 @@ gameLoop gp gs doTurn = do
           hPrint stderr line
           let gsc = cleanState gs
           gse <- updateExplore <$> updateGame gp gsc
-          let orders = filter (passable $ world gse) $ doTurn gp gse
+          let orders = doTurn gp gse
           mapM_ (putStrLn . issueOrder) orders
           mapM_ putStrLn $ (showReachable . world) gse
           finishTurn

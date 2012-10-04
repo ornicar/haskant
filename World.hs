@@ -9,6 +9,7 @@ module World
   , myAnts -- return list of my Ants
   , hisAnts -- return list of visible enemy Ants
 	, isAnt
+  , antPoint
 	, move
 	, updateWorldTile
 	, updateWorldContent
@@ -46,7 +47,10 @@ instance Show Direction where
   show West  = "W"
 
 _tileNeighbors :: World -> Tile -> [Tile]
-_tileNeighbors w t = (w !) <$> toreNeighbors w (point t)
+_tileNeighbors w t = (w !) <$> pointNeighbors w (point t)
+
+antPoint :: Ant -> Point
+antPoint (Ant p _) = p
 
 isAnt :: Content -> Bool
 isAnt t = t `elem` [Mine, His]
