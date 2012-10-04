@@ -24,11 +24,8 @@ data GameState = GameState
   } deriving (Show)
 
 data GameParams = GameParams
-  { loadtime      :: Int
-  , turntime      :: Int
-  , rows          :: Int
+  { rows          :: Int
   , cols          :: Int
-  , turns         :: Int
   , viewradius2   :: Int
   , attackradius2 :: Int
   , spawnradius2  :: Int
@@ -127,22 +124,16 @@ createParams :: [(String, String)] -> GameParams
 createParams s =
   let lookup' key = read $ fromJust $ lookup key s
       twoNormSquared p = row p ^ 2 + col p ^ 2
-      lt  = lookup' "loadtime"
-      tt  = lookup' "turntime"
       rs  = lookup' "rows"
       cs  = lookup' "cols"
-      ts  = lookup' "turns"
       vr2 = lookup' "viewradius2"
       ar2 = lookup' "attackradius2"
       sr2 = lookup' "spawnradius2"
       mx  = truncate $ sqrt $ fromIntegral vr2
       vp' = (,) <$> [-mx..mx] <*> [-mx..mx]
       vp  = filter ((<= 2) . twoNormSquared) vp'
-  in GameParams { loadtime      = lt
-                , turntime      = tt
-                , rows          = rs
+  in GameParams { rows          = rs
                 , cols          = cs
-                , turns         = ts
                 , viewradius2   = vr2
                 , attackradius2 = ar2
                 , spawnradius2  = sr2
