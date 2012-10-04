@@ -1,9 +1,8 @@
 module Algo where
 
-import Data.Graph.Inductive.Query.BFS()
-import Data.Graph.Inductive.Tree (Gr)
-import Data.Graph.AStar
-import Data.Tree
+import           Data.Tree
+
+import           Ants
 
 _breadth :: Tree a -> [a]
 _breadth nd =  map rootLabel $ nd : breadth' [nd]
@@ -11,3 +10,7 @@ _breadth nd =  map rootLabel $ nd : breadth' [nd]
       breadth' [] = []
       breadth' nds = let cs = foldr ((++).subForest) [] nds in
         cs ++ breadth' cs
+
+-- tile surroundings as a rose tree
+tileSurroundings :: World -> Ant -> Tree Tile
+-- antsFarExploration :: World -> [Ant] -> [Maybe Tile]

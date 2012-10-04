@@ -8,6 +8,7 @@ module Ants
   , GameState (..)
   , Order (..)
   , World
+  , Tile
 
     -- Utility functions
   , myAnts -- return list of my Ants
@@ -19,14 +20,14 @@ module Ants
   , game
   ) where
 
-import Data.Array
-import Data.List (isPrefixOf)
-import Data.Char (digitToInt)
-import Data.Maybe (fromJust, fromMaybe, mapMaybe)
-import Control.Applicative
-import System.IO
-import Text.Printf (printf)
-import Debug.Trace
+import           Control.Applicative
+import           Data.Array
+import           Data.Char           (digitToInt)
+import           Data.List           (isPrefixOf)
+import           Data.Maybe          (fromJust, fromMaybe, mapMaybe)
+import           Debug.Trace
+import           System.IO
+import           Text.Printf         (printf)
 
 -- type synonyms
 type Row = Int
@@ -60,11 +61,17 @@ row = fst
 col :: Point -> Col
 col = snd
 
+_neighbors :: World -> Point -> [Point]
+_neighbors w (r,c) = (w %!%) <$> [(r - 1, c), (r, c - 1), (r + 1, c), (r, c + 1)] 
+
+_tileNeighbors :: World -> Tile -> [Tile]
+_tileNeighbors w t = (w !) <$> _neighbors w (point t)
+
 -- Objects appearing on the map
 data Content = Mine | His | Land | Food | Water deriving (Show,Eq,Enum,Bounded)
 
 data Tile = Tile
-  { point :: Point
+  { point   :: Point
   , content :: Content
   , explore :: Int
   } deriving (Show)
@@ -73,7 +80,7 @@ data Owner = Me | Him deriving (Show,Eq,Bounded,Enum)
 
 data Ant = Ant
   { antPoint :: Point
-  , owner :: Owner
+  , owner    :: Owner
   } deriving (Show)
 
 data Direction = North | East | South | West deriving (Bounded, Eq, Enum)
@@ -86,26 +93,26 @@ instance Show Direction where
 
 -- Representation of an order
 data Order = Order
-  { ant :: Ant
+  { ant       :: Ant
   , direction :: Direction
   } deriving (Show)
 
 data GameState = GameState
   { world :: World
-  , ants :: [Ant]
-  , food :: [Point] 
+  , ants  :: [Ant]
+  , food  :: [Point]
   } deriving (Show)
 
 data GameParams = GameParams
-  { loadtime :: Int
-  , turntime :: Int
-  , rows :: Int
-  , cols :: Int
-  , turns :: Int
-  , viewradius2 :: Int
+  { loadtime      :: Int
+  , turntime      :: Int
+  , rows          :: Int
+  , cols          :: Int
+  , turns         :: Int
+  , viewradius2   :: Int
   , attackradius2 :: Int
-  , spawnradius2 :: Int
-  , viewPoints :: [Point]
+  , spawnradius2  :: Int
+  , viewPoints    :: [Point]
   } deriving (Show)
 
 --------------- Tile functions -------------------
@@ -128,7 +135,7 @@ twoNormSquared p = row p ^ 2 + col p ^ 2
 
 _euclidSquare :: Point  -- bound
              -> Point -> Point -> Int
-_euclidSquare bound p1 p2 = 
+_euclidSquare bound p1 p2 =
   let rowd = modDistance (row bound + 1) (row p1) (row p2)
       cold = modDistance (col bound + 1) (col p1) (col p2)
   in (rowd ^ 2) + (cold ^ 2)
@@ -191,7 +198,7 @@ addAnt _ gs own p = GameState {world = newWorld, ants = newAnts, food = food gs}
   where newAnts   = Ant {antPoint = p, owner = own}:ants gs
         tile = world gs %! p
         newTile = tile {content = if own == Me then Mine else His}
-        newWorld  = updateWorldTile (world gs) newTile p 
+        newWorld  = updateWorldTile (world gs) newTile p
 
 updateWorldTile :: World -> Tile -> Point -> World
 updateWorldTile w t p = w // [(p, t)]
@@ -208,9 +215,9 @@ updateGameState gp gs s = fromMaybe gs $ updateGameStateMaybe gp gs s
 
 updateGameStateMaybe :: GameParams -> GameState -> String -> Maybe GameState
 updateGameStateMaybe gp gs s
-  | "f" `isPrefixOf` s = fmap (addFood gs) $ toPoint . tail $ s
-  | "w" `isPrefixOf` s = fmap (updateWorld gs . updateWorldContent (world gs) Water) $ toPoint . tail $ s
-  | "a" `isPrefixOf` s = fmap (addAnt gp gs $ toOwner . digitToInt . last $ s) $ toPoint . init . tail $ s
+  | "f" `isPrefixOf` s = addFood gs <$> toPoint (tail s)
+  | "w" `isPrefixOf` s = (updateWorld gs . updateWorldContent (world gs) Water) <$> toPoint (tail s)
+  | "a" `isPrefixOf` s = addAnt gp gs (toOwner . digitToInt . last $ s) <$> (toPoint . init . tail) s
   | otherwise = Nothing -- ignore line
   where
     toPoint :: String -> Maybe Point
@@ -222,12 +229,12 @@ updateGame :: GameParams -> GameState -> IO GameState
 updateGame gp gs = do
   line <- getLine
   process line
-  where 
+  where
     process line
       | "turn" `isPrefixOf` line = do
           hPutStrLn stderr line
-          updateGame gp gs 
-      | "go" `isPrefixOf` line   = 
+          updateGame gp gs
+      | "go" `isPrefixOf` line   =
           return GameState {world = world gs
                            , ants = ants gs
                            , food = food gs
@@ -235,7 +242,7 @@ updateGame gp gs = do
       | otherwise = updateGame gp $ updateGameState gp gs line
 
 updateExplore :: GameState -> GameState
-updateExplore gs = gs { world = fmap exploration $ world gs }
+updateExplore gs = gs { world = exploration <$> world gs }
   where increment t = t { explore = explore t + 1 }
         antClose t = any (closeBy (world gs) (point t) . antPoint) $ ants gs
         exploration t = if antClose t then t {explore = 0} else increment t
@@ -252,13 +259,13 @@ fOr x = any ($x)
 -- Resets Content to Land if it is currently occupied by food or ant
 -- and makes the content invisible
 clearTile :: Tile -> Tile
-clearTile m 
+clearTile m
   | fOr (content m) [isAnt, (==Food)] = m {content = Land}
-  | otherwise = m 
+  | otherwise = m
 
 -- Clears ants and food and sets tiles to invisible
 cleanState :: GameState -> GameState
-cleanState gs = GameState {world = fmap clearTile $ world gs, ants = [], food = []}
+cleanState gs = GameState {world = clearTile <$> world gs, ants = [], food = []}
 
 gatherParamInput :: IO [String]
 gatherParamInput = gatherInput' []
@@ -267,7 +274,7 @@ gatherParamInput = gatherInput' []
     gatherInput' xs = do
       line <- getLine
       if "ready" /= line then gatherInput' (line:xs) else return xs
-  
+
 createParams :: [(String, String)] -> GameParams
 createParams s =
   let lookup' key = read $ fromJust $ lookup key s
@@ -314,10 +321,10 @@ gameLoop gp gs doTurn = do
   gameLoop' line
   where
     gameLoop' line
-      | "turn" `isPrefixOf` line = do 
+      | "turn" `isPrefixOf` line = do
           hPrint stderr line
           let gsc = cleanState gs
-          gse <- fmap updateExplore $ updateGame gp gsc
+          gse <- updateExplore <$> updateGame gp gsc
           let orders = doTurn gp gse
           mapM_ (putStrLn . issueOrder) orders
           mapM_ putStrLn $ (showReachable . world) gse
@@ -328,16 +335,17 @@ gameLoop gp gs doTurn = do
 
 showReachable :: World -> [String]
 showReachable w = "v setFillColor 0 255 0 0.075" : showTiles
-  where showTiles = fmap showTile $ filter ((==0) . explore) $ elems w
+  where reachableTiles = filter ((==0) . explore) $ elems w
+        showTiles = showTile <$> reachableTiles
         showTile t = printf "v tile %d %d" (row $ point t) (col $ point t)
 
 _debug :: Show a => a -> b -> b
-_debug a = trace (show a) 
+_debug a = trace (show a)
 
 game :: (GameParams -> GameState -> [Order]) -> IO ()
 game doTurn = do
   paramInput <- gatherParamInput
   let gp = createParams $ mapMaybe (tuplify2 . words) paramInput
-  let gs = initialGameState gp 
+  let gs = initialGameState gp
   finishTurn -- signal done with setup
   gameLoop gp gs doTurn
