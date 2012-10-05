@@ -8,6 +8,7 @@ import           Data.Maybe          (fromJust, fromMaybe, mapMaybe)
 import           Debug.Trace
 import           System.IO
 
+import           Algo
 import           Protocol
 import           Tore
 import           World
@@ -137,9 +138,11 @@ gameLoop gp gs doTurn = do
           hPrint stderr line
           let gsc = cleanState gs
           gse <- updateExplore <$> updateGame gp gsc
+          let w = world gse
           let orders = doTurn gp gse
           mapM_ (putStrLn . issueOrder) orders
-          mapM_ putStrLn $ (showReachable . world) gse
+          mapM_ putStrLn $ showReachable w
+          hPutStrLn stderr $ showSurrounding w
           finishTurn
           gameLoop gp gse doTurn
       | "end" `isPrefixOf` line = endGame

@@ -1,4 +1,6 @@
-module Algo where
+module Algo(
+  showSurrounding
+) where
 
 import           Control.Applicative
 import           Data.List
@@ -15,18 +17,26 @@ _breadth nd =  map rootLabel $ nd : breadth' [nd]
         cs ++ breadth' cs
 
 -- point surroundings as a rose tree
-surroundings :: World
-  -> Int -- distance
+surroundings :: Int -- distance
   -> [Point] -- visited
+  -> World
   -> Point -- start point
   -> Tree Point
-surroundings w dist visited p = Node p forest
+surroundings dist visited w p = Node p forest
   where neighbors = pointNeighbors w p \\ visited
         newDist = dist - 1
         newVisited = p : visited ++ neighbors
         forest
           | dist == 0 = []
           | null neighbors = []
-          | otherwise = surroundings w newDist newVisited <$> neighbors
+          | otherwise = surroundings newDist newVisited w <$> neighbors
+
+closeSurroundings :: World -> Point -> Tree Point
+closeSurroundings = surroundings 2 []
+
+showSurrounding :: World -> String
+showSurrounding w = drawTree strTree
+  where strTree = show <$> tree
+        tree = closeSurroundings w (10, 10)
 
 -- antsFarExploration :: World -> [Ant] -> [Maybe Tile]

@@ -1,9 +1,9 @@
 module Ai (
-  doTurn
+    doTurn
 ) where
 
 import           Data.List
-import           Data.Maybe (mapMaybe)
+import           Data.Maybe          (mapMaybe)
 
 import           Protocol
 import           Tore
