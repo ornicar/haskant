@@ -1,6 +1,7 @@
 module Util(
     fOr
   , tuplify2
+  , enumerate
 ) where
 
 import           Debug.Trace
@@ -14,3 +15,6 @@ tuplify2 _ = Nothing
 
 _debug :: Show a => a -> b -> b
 _debug a = trace (show a)
+
+enumerate :: (Enum a, Bounded a) => [a]
+enumerate = [minBound .. maxBound]

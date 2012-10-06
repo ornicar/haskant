@@ -5,7 +5,6 @@ import           Data.List           (isPrefixOf)
 import           Data.Maybe          (mapMaybe)
 
 import           Protocol
-import           Search
 import           System.IO
 import           Util
 import           World
@@ -56,7 +55,6 @@ gameLoop gp gs doTurn = do
           let orders = doTurn gse
           mapM_ (putStrLn . issueOrder) orders
           mapM_ putStrLn $ showReachable w
-          hPutStrLn stderr $ showSurrounding w
           finishTurn
           gameLoop gp gse doTurn
       | "end" `isPrefixOf` line = endGame

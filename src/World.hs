@@ -11,6 +11,7 @@ module World
 	, isAnt
   , antPoint
 	, move
+  , directions
 	, updateWorldTile
 	, updateWorldContent
 	, clearTile
@@ -30,7 +31,7 @@ data Content = Mine | His | Land | Food | Water deriving (Show,Eq,Enum,Bounded)
 data Tile = Tile
   { point   :: Point
   , content :: Content
-  , explore :: Int
+  , mystery :: Int
   } deriving (Show)
 
 type World = Tore Tile
@@ -40,6 +41,9 @@ data Owner = Me | Him deriving (Show,Eq,Bounded,Enum)
 data Ant = Ant Point Owner deriving (Show)
 
 data Direction = North | East | South | West deriving (Bounded, Eq, Enum, Show)
+
+directions :: [Direction]
+directions = enumerate
 
 _tileNeighbors :: World -> Tile -> [Tile]
 _tileNeighbors w t = (w !) <$> pointNeighbors w (point t)
@@ -88,6 +92,6 @@ clearTile m
 
 showReachable :: World -> [String]
 showReachable w = "v setFillColor 0 255 0 0.075" : showTiles
-  where reachableTiles = filter ((==0) . explore) $ elems w
+  where reachableTiles = filter ((==0) . mystery) $ elems w
         showTiles = showTile <$> reachableTiles
         showTile t = printf "v tile %d %d" (row $ point t) (col $ point t)

@@ -9,7 +9,7 @@ Cabal-Version:      >=1.8
 library
   exposed-modules:  Ants, Protocol, Search, Ai, Tore, World
   hs-source-dirs:   src .
-  -- ghc-options:      -O2
+  ghc-options:      -O2 -Wall
   ghc-prof-options: -prof -caf-all -auto-all
   build-depends:    base >= 4,
                     containers >= 0.4,
@@ -17,7 +17,7 @@ library
 
 executable MyBot
   main-is:          MyBot.hs
-  -- ghc-options:      -O2
+  ghc-options:      -O2 -Wall
   ghc-prof-options: -prof -caf-all -auto-all
   build-depends:    base >= 4,
                     haskant
