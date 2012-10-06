@@ -40,7 +40,13 @@ data Owner = Me | Him deriving (Show,Eq,Bounded,Enum)
 
 data Ant = Ant Point Owner deriving (Show)
 
-data Direction = North | East | South | West deriving (Bounded, Eq, Enum, Show)
+data Direction = North | East | South | West deriving (Bounded, Eq, Enum)
+
+instance Show Direction where
+  show North = "N"
+  show East  = "E"
+  show South = "S"
+  show West  = "W"
 
 directions :: [Direction]
 directions = enumerate
@@ -91,7 +97,7 @@ clearTile m
   | otherwise = m
 
 showReachable :: World -> [String]
-showReachable w = "v setFillColor 0 255 0 0.075" : showTiles
+showReachable w = "v setFillColor 100 0 0 0.75" : showTiles
   where reachableTiles = filter ((==0) . mystery) $ elems w
         showTiles = showTile <$> reachableTiles
         showTile t = printf "v tile %d %d" (row $ point t) (col $ point t)

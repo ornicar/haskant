@@ -1,9 +1,10 @@
 module Ai (
-    doTurn
+    DoTurn
+  , doTurn
   , orderPassable
 ) where
 
-import Control.Applicative
+import           Control.Applicative
 import           Data.List
 import           Data.Maybe          (mapMaybe)
 
@@ -11,11 +12,14 @@ import           Protocol
 import           Tore
 import           World
 
+type DoTurn = GameState -> (GameState, [Order])
+
 -- Entry point
-doTurn :: GameState -> [Order]
-doTurn gs = mapMaybe (tryOrder (world mysterious)) generatedOrders
-  where mysterious = updateMystery gs
-        generatedOrders = map generateOrders $ myAnts $ ants mysterious
+doTurn :: DoTurn
+doTurn gs = (ngs, orders)
+  where orders = mapMaybe (tryOrder (world ngs)) generatedOrders
+        ngs = updateMystery gs
+        generatedOrders = map generateOrders $ myAnts $ ants ngs
 
 -- | Picks the first "passable" order in a list
 -- returns Nothing if no such order exists

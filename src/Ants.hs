@@ -4,6 +4,7 @@ import           Control.Applicative
 import           Data.List           (isPrefixOf)
 import           Data.Maybe          (mapMaybe)
 
+import           Ai                  (DoTurn)
 import           Protocol
 import           System.IO
 import           Util
@@ -41,7 +42,7 @@ endGame = do
   scores <- getLine
   hPutStrLn stderr $ "Final scores: " ++ unwords (tail $ words scores)
 
-gameLoop :: GameParams -> GameState -> (GameState -> [Order]) -> IO ()
+gameLoop :: GameParams -> GameState -> DoTurn -> IO ()
 gameLoop gp gs doTurn = do
   line <- getLine
   gameLoop' line
@@ -51,16 +52,15 @@ gameLoop gp gs doTurn = do
           hPrint stderr line
           let gsc = cleanState gs
           gse <- updateGameFromInput gp gsc
-          let w = world gse
-          let orders = doTurn gse
+          let (ngs, orders) = doTurn gse
           mapM_ (putStrLn . issueOrder) orders
-          mapM_ putStrLn $ showReachable w
+          mapM_ putStrLn $ showReachable (world ngs)
           finishTurn
           gameLoop gp gse doTurn
       | "end" `isPrefixOf` line = endGame
       | otherwise = gameLoop gp gs doTurn -- ignore line
 
-game :: (GameState -> [Order]) -> IO ()
+game :: DoTurn -> IO ()
 game doTurn = do
   paramInput <- gatherParamInput
   let gp = createParams $ mapMaybe (tuplify2 . words) paramInput

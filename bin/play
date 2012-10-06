@@ -2,6 +2,8 @@
 
 turns=${1:-3}
 
+cabal build 
+
 ./vistools/playgame.py \
   --player_seed 42 \
   --end_wait=0.25 \

@@ -3,7 +3,6 @@ module Search(
 ) where
 
 import           Control.Applicative
-import           Control.Monad.State
 import           Data.List
 import           Data.Tree
 import           GHC.Exts            (sortWith)
@@ -58,22 +57,13 @@ type Position = Point
 type Distance = Int
 type Visited = [Point]
 
-type ExploreOneState = (World, Position, Distance, Visited)
+type ExplorationOne = (World, Position, Distance, Visited)
 
-exploreNeighborsOne :: State ExploreOneState [Point]
-exploreNeighborsOne = state fun 
-  where fun s @ (_, _, 0, _) = ([], s)
-        fun (w, p, dist, visited) = (neighbors, newState)
-          where neighbors = pointNeighbors w p \\ visited
-                newState = (w, p, dist - 1, p : visited ++ neighbors)
+exploreNeighborsOne :: ExplorationOne -> [ExplorationOne]
+exploreNeighborsOne s @ (_, _, 0, _) = []
+exploreNeighborsOne (w, p, dist, visited) = exploration <$> neighbors
+  where neighbors = pointNeighbors w p \\ visited
+        newVisited = p : visited ++ neighbors
+        exploration x = (w, x, dist - 1, newVisited)
 
 type ExploreManyState = (World, [Position], Distance, Visited)
-
-type Exploring = (
-
-exploreNeighborsMany :: State ExploreManyState [[Point]]
-exploreNeighborsMany = state fun
-  where fun s @ (_, _, 0, _) = ([], s)
-        fun (w, ps, dist, visited) = (neighbors, newState)
-          where exploreOnes = (\p -> (w, p, dist, visited)) <$> ps
-                results = foldl accumulate ps
