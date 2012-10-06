@@ -1,4 +1,4 @@
-module Algo(
+module Search(
   showSurrounding
 ) where
 
@@ -39,4 +39,5 @@ showSurrounding w = drawTree strTree
   where strTree = show <$> tree
         tree = closeSurroundings w (10, 10)
 
--- antsFarExploration :: World -> [Ant] -> [Maybe Tile]
+antsFarExploration :: World -> [Ant] -> [Maybe Tile]
+antsFarExploration = undefined

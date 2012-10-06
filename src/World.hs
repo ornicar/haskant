@@ -14,7 +14,7 @@ module World
 	, updateWorldTile
 	, updateWorldContent
 	, clearTile
-	, showReachable	
+	, showReachable
   ) where
 
 import           Control.Applicative
@@ -22,6 +22,7 @@ import           Data.Array
 import           Text.Printf         (printf)
 
 import           Tore
+import           Util
 
 -- Objects appearing on the map
 data Content = Mine | His | Land | Food | Water deriving (Show,Eq,Enum,Bounded)
@@ -38,13 +39,7 @@ data Owner = Me | Him deriving (Show,Eq,Bounded,Enum)
 
 data Ant = Ant Point Owner deriving (Show)
 
-data Direction = North | East | South | West deriving (Bounded, Eq, Enum)
-
-instance Show Direction where
-  show North = "N"
-  show East  = "E"
-  show South = "S"
-  show West  = "W"
+data Direction = North | East | South | West deriving (Bounded, Eq, Enum, Show)
 
 _tileNeighbors :: World -> Tile -> [Tile]
 _tileNeighbors w t = (w !) <$> pointNeighbors w (point t)
@@ -83,9 +78,6 @@ updateWorldTile w t p = w // [(p, t)]
 updateWorldContent :: World -> Content -> Point -> World
 updateWorldContent w c p = updateWorldTile w newTile p
   where newTile = (w %! p) {content = c}
-
-fOr :: a -> [a -> Bool] -> Bool
-fOr x = any ($x)
 
 -- Resets Content to Land if it is currently occupied by food or ant
 -- and makes the content invisible
