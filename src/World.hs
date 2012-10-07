@@ -6,12 +6,18 @@ module World
   , World
   , Tile (..)
 	, Content (..)
+  , TileTest
   , myAnts -- return list of my Ants
   , hisAnts -- return list of visible enemy Ants
 	, isAnt
+  , isMine
+  , isOpen
   , antPoint
+  , antTile
 	, move
   , directions
+  , tileNeighbors
+  , tileOpenNeighbors
 	, updateWorldTile
 	, updateWorldContent
 	, clearTile
@@ -28,11 +34,11 @@ import           Util
 -- Objects appearing on the map
 data Content = Mine | His | Land | Food | Water deriving (Show,Eq,Enum,Bounded)
 
-data Tile = Tile
-  { point   :: Point
-  , content :: Content
-  , mystery :: Int
-  } deriving (Show)
+data Tile = Tile { point :: Point, content :: Content, mystery :: Int }
+
+instance Eq Tile where a == b = point a == point b
+instance Show Tile where show a = (show . point) a ++ "{" ++ (show . content) a ++ "}"
+instance Ord Tile where compare a b = compare (point a) (point b)
 
 type World = Tore Tile
 
@@ -41,6 +47,8 @@ data Owner = Me | Him deriving (Show,Eq,Bounded,Enum)
 data Ant = Ant Point Owner deriving (Show)
 
 data Direction = North | East | South | West deriving (Bounded, Eq, Enum)
+
+type TileTest = Tile -> Bool
 
 instance Show Direction where
   show North = "N"
@@ -51,14 +59,23 @@ instance Show Direction where
 directions :: [Direction]
 directions = enumerate
 
-_tileNeighbors :: World -> Tile -> [Tile]
-_tileNeighbors w t = (w !) <$> pointNeighbors w (point t)
+tileNeighbors :: World -> Tile -> [Tile]
+tileNeighbors w t = (w !) <$> pointNeighbors w (point t)
+
+tileOpenNeighbors :: World -> Tile -> [Tile]
+tileOpenNeighbors w t = filter (isOpen . content) $ tileNeighbors w t
 
 antPoint :: Ant -> Point
 antPoint (Ant p _) = p
 
+antTile :: World -> Ant -> Tile
+antTile w a = w ! antPoint a
+
 isAnt :: Content -> Bool
-isAnt t = t `elem` [Mine, His]
+isAnt c = c `elem` [Mine, His]
+
+isOpen :: Content -> Bool
+isOpen c = c /= Water
 
 _oneNorm :: Point -> Int
 _oneNorm p = row p + col p
@@ -97,7 +114,7 @@ clearTile m
   | otherwise = m
 
 showReachable :: World -> [String]
-showReachable w = "v setFillColor 100 0 0 0.75" : showTiles
+showReachable w = "v setFillColor 0 0 120 0.2" : showTiles
   where reachableTiles = filter ((==0) . mystery) $ elems w
         showTiles = showTile <$> reachableTiles
         showTile t = printf "v tile %d %d" (row $ point t) (col $ point t)

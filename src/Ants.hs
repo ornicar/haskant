@@ -56,7 +56,7 @@ gameLoop gp gs doTurn = do
           mapM_ (putStrLn . issueOrder) orders
           mapM_ putStrLn $ showReachable (world ngs)
           finishTurn
-          gameLoop gp gse doTurn
+          gameLoop gp ngs doTurn
       | "end" `isPrefixOf` line = endGame
       | otherwise = gameLoop gp gs doTurn -- ignore line
 

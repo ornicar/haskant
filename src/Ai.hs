@@ -7,8 +7,10 @@ module Ai (
 import           Control.Applicative
 import           Data.List
 import           Data.Maybe          (mapMaybe)
+import qualified Data.Set as S
 
 import           Protocol
+import           Search
 import           Tore
 import           World
 
@@ -35,7 +37,9 @@ orderPassable w (ant, dir) = content (w %! newPoint) /= Water
   where newPoint = move dir (antPoint ant)
 
 updateMystery :: GameState -> GameState
-updateMystery gs = gs { world = exploration <$> world gs }
-  where increment t = t { mystery = mystery t + 1 }
-        antClose t = any (closeBy ((toreBound . world) gs) (point t) . antPoint) $ ants gs
-        exploration t = if antClose t then t {mystery = 0} else increment t
+updateMystery gs = gs { world = exploration <$> w }
+  where w = world gs
+        allReachableTiles = bfsTilesFroms w 10 (antTile w <$> ants gs) 
+        increment t = t { mystery = mystery t + 1 }
+        reachable = flip S.member allReachableTiles 
+        exploration t = if reachable t then t {mystery = 0} else increment t
