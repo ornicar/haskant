@@ -15,6 +15,7 @@ module World
   , antPoint
   , antTile
 	, move
+  , moveOpen
   , directions
   , tileNeighbors
   , tileOpenNeighbors
@@ -26,7 +27,6 @@ module World
 
 import           Control.Applicative
 import           Data.Array
-import           Text.Printf         (printf)
 
 import           Tore
 import           Util
@@ -92,12 +92,16 @@ isHis = not . isMine
 hisAnts :: [Ant] -> [Ant]
 hisAnts = filter isHis
 
-move :: Direction -> Point -> Point
-move dir p
+move :: Point -> Direction -> Point
+move p dir
   | dir == North = (row p - 1, col p)
   | dir == South = (row p + 1, col p)
   | dir == West  = (row p, col p - 1)
   | otherwise    = (row p, col p + 1)
+
+moveOpen :: World -> Tile -> Direction -> Maybe Tile
+moveOpen w tile dir = if (isOpen . content) t2 then Just t2 else Nothing
+  where t2 = w %! move (point tile) dir
 
 updateWorldTile :: World -> Tile -> Point -> World
 updateWorldTile w t p = w // [(p, t)]
@@ -114,7 +118,7 @@ clearTile m
   | otherwise = m
 
 showReachable :: World -> [String]
-showReachable w = "v setFillColor 0 0 120 0.2" : showTiles
+showReachable w = fillColor blue : showTiles
   where reachableTiles = filter ((==0) . mystery) $ elems w
         showTiles = showTile <$> reachableTiles
-        showTile t = printf "v tile %d %d" (row $ point t) (col $ point t)
+        showTile = drawPoint . point

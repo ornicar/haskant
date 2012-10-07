@@ -1,0 +1,3 @@
+#!/bin/sh
+
+cabal configure --enable-executable-profiling --enable-library-profiling && cabal build

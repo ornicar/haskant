@@ -13,5 +13,5 @@ turns=${1:-3}
   --log_stderr \
   --turns $turns \
   --map_file tools/maps/example/tutorial1.map \
-  "/home/thib/haskant/dist/build/MyBot/MyBot" \
+  "/home/thib/haskant/dist/build/MyBot/MyBot +RTS -xc -RTS" \
   "python tools/sample_bots/python/HoldBot.py" 
