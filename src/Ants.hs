@@ -55,10 +55,10 @@ gameLoop gp gs doTurn = do
           let (ngs, orders) = doTurn gse
           mapM_ (putStrLn . issueOrder) orders
           -- mapM_ putStrLn $ showReachable (world ngs)
-          mapM_ putStrLn $ showBorders ngs North green
-          mapM_ putStrLn $ showBorders ngs West red
-          mapM_ putStrLn $ showBorders ngs South blue
-          mapM_ putStrLn $ showBorders ngs East gray
+          -- mapM_ putStrLn $ showBorders ngs North green
+          -- mapM_ putStrLn $ showBorders ngs West red
+          -- mapM_ putStrLn $ showBorders ngs South blue
+          -- mapM_ putStrLn $ showBorders ngs East gray
           finishTurn
           gameLoop gp ngs doTurn
       | "end" `isPrefixOf` line = endGame
