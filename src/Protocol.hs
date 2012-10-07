@@ -20,8 +20,8 @@ import           World
 
 data GameState = GameState
   { world :: World
-  , ants  :: [Ant]
-  , food  :: [Point]
+  , gameAnts  :: [Ant]
+  , gameFoods  :: [Point]
   } deriving (Show)
 
 data GameParams = GameParams
@@ -32,8 +32,6 @@ data GameParams = GameParams
   , spawnradius2  :: Int
   , viewPoints    :: [Point]
   } deriving (Show)
-
-type Order = (Ant, Direction)
 
 issueOrder :: Order -> String
 issueOrder (ant, dir) = "o " ++ srow ++ " " ++ scol ++ " " ++ sdir
@@ -62,7 +60,7 @@ createParams s =
                 }
 
 initialGameState :: GameParams -> GameState
-initialGameState gp = GameState {world = w, ants = [], food = []}
+initialGameState gp = GameState {world = w, gameAnts = [], gameFoods = []}
   where maxRows = rows gp - 1
         maxCols = cols gp - 1
         w = listArray ((0,0), (maxRows, maxCols)) [Tile (x, y) Land 0 | x <- [0..maxRows], y <- [0..maxCols]]
@@ -83,13 +81,13 @@ updateGameStateMaybe gs s
     toOwner _ = Him
 
 addFood :: GameState -> Point -> GameState
-addFood gs p = gs {world = newWorld, food = p:food gs}
+addFood gs p = gs {world = newWorld, gameFoods = p:gameFoods gs}
   where tile = world gs %! p
         newWorld = updateWorldTile (world gs) (tile {content = Food}) p
 
 addAnt :: GameState -> Owner -> Point -> GameState
-addAnt gs own p = GameState {world = newWorld, ants = newAnts, food = food gs}
-  where newAnts   = Ant p own : ants gs
+addAnt gs own p = GameState {world = newWorld, gameAnts = newAnts, gameFoods = gameFoods gs}
+  where newAnts   = Ant p own : gameAnts gs
         tile = world gs %! p
         newTile = tile {content = if own == Me then Mine else His}
         newWorld  = updateWorldTile (world gs) newTile p

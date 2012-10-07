@@ -4,6 +4,7 @@ module Search(
   , bfsTilesFroms
   , bfsMysteriousDir
   , bfsBorders
+  , bfsMovesTo
 ) where
 
 import           Control.Applicative
@@ -11,14 +12,20 @@ import           Data.List           (find)
 import           Data.Maybe          (listToMaybe)
 import qualified Data.Set            as S
 import           GHC.Exts            (sortWith)
+import           Tore
 import           Util
 import           World
 
 type Distance = Int
 type Position = Tile
 type TileSet = S.Set Tile
-type Visited = TileSet
 type Skip = TileSet
+type Visited = [Point]
+
+bfsMovesTo :: World -> Distance -> Foods -> [Ant] -> [Visited] -> [Move]
+bfsMovesTo _ _ _ [] _ = []
+bfsMovesTo _ _ [] _ _ = []
+bfsMovesTo w d tos ants visited = undefined
 
 -- gets all reachable tiles from several positions
 bfsTilesFroms :: World -> Distance -> [Tile] -> TileSet

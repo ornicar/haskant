@@ -6,7 +6,11 @@ module World
   , World
   , Tile (..)
 	, Content (..)
-  , TileTest
+  , Order
+  , Move
+  , Foods
+  , Ants
+  , Orders
   , myAnts -- return list of my Ants
   , hisAnts -- return list of visible enemy Ants
 	, isAnt
@@ -16,6 +20,7 @@ module World
   , antTile
 	, move
   , moveOpen
+  , moveToOrder
   , directions
   , tileNeighbors
   , tileOpenNeighbors
@@ -46,9 +51,9 @@ data Owner = Me | Him deriving (Show,Eq,Bounded,Enum)
 
 data Ant = Ant Point Owner deriving (Show)
 
-data Direction = North | East | South | West deriving (Bounded, Eq, Enum)
+instance Eq Ant where Ant a _ == Ant b _ = a == b
 
-type TileTest = Tile -> Bool
+data Direction = North | East | South | West deriving (Bounded, Eq, Enum)
 
 instance Show Direction where
   show North = "N"
@@ -56,8 +61,26 @@ instance Show Direction where
   show South = "S"
   show West  = "W"
 
+type Order = (Ant, Direction)
+type Move = (Ant, Point)
+type Foods = [Point]
+type Ants = [Ant]
+type Orders = [Order]
+
 directions :: [Direction]
 directions = enumerate
+
+moveToOrder :: Move -> Order
+moveToOrder (ant @ (Ant (r1, c1) _), (r2, c2)) = (ant, dir)
+  where dir = if r1 == r2 then sameRow else sameCol
+        sameRow
+            | c1 == c2 - 1 = East
+            | c1 == c2 + 1 = West
+            | otherwise = if c1 == 0 then West else East
+        sameCol
+            | r1 == r2 - 1 = South
+            | r1 == r2 + 1 = North
+            | otherwise = if r1 == 0 then North else South
 
 tileNeighbors :: World -> Tile -> [Tile]
 tileNeighbors w t = (w !) <$> pointNeighbors w (point t)
