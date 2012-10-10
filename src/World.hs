@@ -8,9 +8,9 @@ module World
 	, Content (..)
   , Order
   , Move
-  , Foods
   , Ants
   , Orders
+  , Tiles
   , myAnts -- return list of my Ants
   , hisAnts -- return list of visible enemy Ants
 	, isAnt
@@ -62,16 +62,16 @@ instance Show Direction where
   show West  = "W"
 
 type Order = (Ant, Direction)
-type Move = (Ant, Point)
-type Foods = [Point]
+type Move = (Point, Point)
 type Ants = [Ant]
 type Orders = [Order]
+type Tiles = [Tile]
 
 directions :: [Direction]
 directions = enumerate
 
 moveToOrder :: Move -> Order
-moveToOrder (ant @ (Ant (r1, c1) _), (r2, c2)) = (ant, dir)
+moveToOrder (p@(r1, c1), (r2, c2)) = (Ant p Me, dir)
   where dir = if r1 == r2 then sameRow else sameCol
         sameRow
             | c1 == c2 - 1 = East

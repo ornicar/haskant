@@ -2,6 +2,7 @@ module Tore
   (
     Tore
   , Point
+  , Points
   , Bound
   , row
   , col
@@ -20,6 +21,7 @@ import           Data.Array
 type Row = Int
 type Col = Int
 type Point = (Row, Col)
+type Points = [Point]
 type Bound = Point
 type Tore a = Array Point a
 

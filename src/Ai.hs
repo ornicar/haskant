@@ -1,7 +1,6 @@
 module Ai (
     DoTurn
   , doTurn
-  , showBorders
 ) where
 
 import           Control.Applicative
@@ -13,22 +12,30 @@ import           Protocol
 import           Search
 import           Util
 import           World
+import           Tore
 
-type DoTurn = GameState -> (GameState, [Order])
+type DoTurn = GameState -> IO (GameState, [Order])
 
 antCheckDist = 8
 
 doTurn :: DoTurn
-doTurn gs = (ngs, orders)
+doTurn gs = do
+  mapM_ putStrLn $ showTargets foodTargets black
+  return (ngs, exploreOrders)
   where ngs = updateMystery gs
-        orders = catMaybes generatedOrders
-        generatedOrders = generateOrders (world ngs) <$> myAnts (gameAnts ngs)
+        w = world ngs
+        allAnts = myAnts (gameAnts ngs)
+        foodTargets = _debugPrefix "food targets" $ collectFoods w ((w %!) <$> gameFoods ngs) allAnts
+        foodOrders = (moveToOrder . fst) <$> foodTargets
+        exploreAnts = allAnts -- \\ (fst <$> foodOrders)
+        exploreOrders = explore w exploreAnts
 
-generateOrders :: World -> Ant -> Maybe Order
-generateOrders w a = (,) a <$> bfsMysteriousDir w antCheckDist (antTile w a)
+explore :: World -> Ants -> [Order]
+explore w ants = catMaybes $ exploreAnt <$> ants
+  where exploreAnt a = (,) a <$> bfsAttractiveDir w antCheckDist (antTile w a)
 
-collectFoods :: World -> Foods -> Ants -> Orders
-collectFoods w foods ants = moveToOrder <$> bfsMovesTo w 10 foods ants []
+collectFoods :: World -> [Tile] -> Ants -> [(Move, Point)]
+collectFoods w = bfsMovesTo w 10 
 
 updateMystery :: GameState -> GameState
 updateMystery gs = gs { world = exploration <$> w }
@@ -37,6 +44,10 @@ updateMystery gs = gs { world = exploration <$> w }
         increment t = t { mystery = mystery t + 1 }
         reachable = flip S.member allReachableTiles
         exploration t = if reachable t then t {mystery = 0} else increment t
+
+showTargets :: [(Move, Point)] -> String -> [String]
+showTargets targets color = lineColor color : (targets >>= showTarget)
+  where showTarget ((a, b), c) = drawArrow a <$> [b, c]
 
 showBorders :: GameState -> Direction -> String -> [String]
 showBorders gs dir color = fillColor color : showTiles

@@ -4,7 +4,7 @@ import           Control.Applicative
 import           Data.List           (isPrefixOf)
 import           Data.Maybe          (mapMaybe)
 
-import           Ai                  (DoTurn, showBorders)
+import           Ai                  (DoTurn)
 import           Protocol
 import           System.IO
 import           Util
@@ -20,14 +20,14 @@ updateGameFromInput gp gs = do
               updateGameFromInput gp gs
           | "go" `isPrefixOf` line   =
               return GameState {world = world gs
-                              , ants = ants gs
-                              , food = food gs
+                              , gameAnts = gameAnts gs
+                              , gameFoods = gameFoods gs
                               }
           | otherwise = updateGameFromInput gp $ updateGameState gs line
 
 -- Clears ants and food and sets tiles to invisible
 cleanState :: GameState -> GameState
-cleanState gs = GameState {world = clearTile <$> world gs, ants = [], food = []}
+cleanState gs = GameState {world = clearTile <$> world gs, gameAnts = [], gameFoods = []}
 
 gatherParamInput :: IO [String]
 gatherParamInput = gatherInput' []
@@ -52,7 +52,7 @@ gameLoop gp gs doTurn = do
           hPrint stderr line
           let gsc = cleanState gs
           gse <- updateGameFromInput gp gsc
-          let (ngs, orders) = doTurn gse
+          (ngs, orders) <- doTurn gse
           mapM_ (putStrLn . issueOrder) orders
           -- mapM_ putStrLn $ showReachable (world ngs)
           -- mapM_ putStrLn $ showBorders ngs North green
