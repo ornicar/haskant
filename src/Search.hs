@@ -7,7 +7,7 @@ module Search(
 ) where
 
 import           Control.Applicative
-import           Control.Monad       (join)
+import           Control.Arrow       ((***))
 import           Data.List           (find)
 import           Data.Maybe          (listToMaybe)
 import qualified Data.Set            as S
@@ -21,18 +21,18 @@ type Position = Tile
 type TileSet = S.Set Tile
 type Skip = TileSet
 type Visited = S.Set Tile
-type Source = Tile
+type Source = Point
+type Prev = Point
 type Target = (Move, Point)
 type Targets = [Target]
-type Path = (Source, Tile)
+type Path = ((Source, Prev), Tile)
 type Paths = [Path]
 type AntPoints = S.Set Point
 
-bfsMovesTo :: World -> Distance -> [Source] -> Ants -> Targets
-bfsMovesTo w d s ants = bfsMovesToAll w d S.empty (join (,) <$> s) makeAntPoints
+bfsMovesTo :: World -> Distance -> [Tile] -> Ants -> Targets
+bfsMovesTo w d sources ants = bfsMovesToAll w d S.empty makePaths makeAntPoints
   where makeAntPoints = S.fromList $ (\(Ant p _) -> p) <$> ants
-
-type PathState = (Visited, Paths)
+        makePaths = (\s -> ((point s,point s),s)) <$> sources
 
 bfsMovesToAll :: World -> Distance -> Visited -> Paths -> AntPoints -> Targets
 bfsMovesToAll _ _ _ [] _ = []
@@ -43,26 +43,27 @@ bfsMovesToAll w dist visited paths ants | S.null ants = []
         (newVis, newPaths) = visitPaths (visited, paths)
         (_, remainingAnts, targets) = applyPaths (newPaths, ants, [])
         remainingPaths = filter validSource newPaths
-        validSource path = (point . fst) path `notElem` targetsPoints
+        validSource path = (fst . fst) path `notElem` targetsPoints
         targetsPoints = snd <$> targets
-        visitPaths :: PathState -> (Visited, Paths)
+        visitPaths :: (Visited, Paths) -> (Visited, Paths)
         visitPaths (vis, pp) = foldl visitPath (vis, []) pp
         visitPath :: (Visited, Paths) -> Path -> (Visited, Paths)
         visitPath (vis, pp) path = (vis `S.union` newTiles, nps ++ pp)
-          where newTiles = S.fromList (tileOpenNeighbors w (snd path)) `S.difference` vis
-                nps = (,) (fst path) <$> S.toList newTiles
+          where newTiles = tileOpenNeighbors w (snd path) `S.difference` vis
+                nps = newPath <$> S.toList newTiles
+                newPath tile = ((fst *** point) path, tile)
 
 -- for each path, try to add a target
 -- and then remove the paths from the same source
 -- and the used ant
 applyPaths :: (Paths, AntPoints, Targets) -> (Paths, AntPoints, Targets)
 applyPaths ([], ants, targets) = ([], ants, targets)
-applyPaths ((source, tile):paths, ants, targets)
+applyPaths (((source, prev), tile):paths, ants, targets)
   | hasAnt = applyPaths (remainingPaths, remainingAnts, newTargets)
-  | otherwise = (paths, ants, targets)
+  | otherwise = applyPaths (paths, ants, targets)
   where remainingAnts = S.delete (point tile) ants
-        remainingPaths = filter ((/= source) . fst) paths
-        newTargets = ((point tile, point tile), point source) : targets
+        remainingPaths = filter ((/= source) . fst . fst) paths
+        newTargets = ((point tile, prev), source) : targets
         hasAnt = point tile `S.member` ants
 
 -- gets all reachable tiles from several positions
@@ -79,7 +80,7 @@ bfsTilesFrom w dist tile = snd bfsResult
 
 -- gets the walkable direct neighbors and the updated visited set
 bfsStep :: World -> Skip -> Tile -> TileSet
-bfsStep w skip tile = S.difference (S.fromList $ tileOpenNeighbors w tile) skip
+bfsStep w skip tile = S.difference (tileOpenNeighbors w tile) skip
 
 bfsAttractiveDir :: World -> Distance -> Tile -> Maybe Direction
 bfsAttractiveDir w d t = listToMaybe mysteriousDirs <|> listToMaybe openDirs

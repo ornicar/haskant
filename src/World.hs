@@ -32,6 +32,7 @@ module World
 
 import           Control.Applicative
 import           Data.Array
+import qualified Data.Set as S
 
 import           Tore
 import           Util
@@ -82,11 +83,11 @@ moveToOrder (p@(r1, c1), (r2, c2)) = (Ant p Me, dir)
             | r1 == r2 + 1 = North
             | otherwise = if r1 == 0 then North else South
 
-tileNeighbors :: World -> Tile -> [Tile]
-tileNeighbors w t = (w !) <$> pointNeighbors w (point t)
+tileNeighbors :: World -> Tile -> S.Set Tile
+tileNeighbors w t = S.mapMonotonic (w !) $ pointNeighbors w (point t)
 
-tileOpenNeighbors :: World -> Tile -> [Tile]
-tileOpenNeighbors w t = filter (isOpen . content) $ tileNeighbors w t
+tileOpenNeighbors :: World -> Tile -> S.Set Tile
+tileOpenNeighbors w t = S.filter (isOpen . content) $ tileNeighbors w t
 
 antPoint :: Ant -> Point
 antPoint (Ant p _) = p
