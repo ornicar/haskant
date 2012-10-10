@@ -5,6 +5,7 @@ module Ai (
 
 import           Control.Applicative
 import           Data.List           ((\\))
+import qualified Data.Map            as M
 import           Data.Maybe          (catMaybes)
 import qualified Data.Set            as S
 
@@ -21,7 +22,7 @@ exploreDist = 7
 foodDist = 8
 
 doTurn :: DoTurn
-doTurn gs = return (ngs, preventCollisions ngs allOrders)
+doTurn gs = return (ngs, preventCollisions (world ngs) allOrders)
   where ngs = updateMystery gs
         w = world ngs
         allOrders = foodOrders ++ exploreOrders
@@ -38,19 +39,9 @@ explore w ants = catMaybes $ exploreAnt <$> ants
 collectFoods :: World -> [Tile] -> [Point] -> [(Move, Point)]
 collectFoods w = bfsMovesTo w foodDist
 
-preventCollisions :: GameState -> [Order] -> [Order]
-preventCollisions gs allOrders = validateOrders allOrders immobileAntPoints
-  where immobileAntPoints = S.fromList $ antPoints \\ (fst <$> allOrders)
-        antPoints = fst <$> myAnts (gameAnts gs)
-        validateOrders :: [Order] -> S.Set Point -> [Order]
-        validateOrders [] _ = []
-        validateOrders (order:orders) aps = if isValid then valid else invalid
-          where isValid = orderPoint `S.notMember` aps
-                orderPoint = uncurry (toreMove (world gs)) order
-                valid = order : validateOrders orders nextAntPoints
-                  where nextAntPoints = orderPoint `S.insert` aps
-                invalid = _debug ("Invalid " ++ show order) $ validateOrders orders nextAntPoints
-                  where nextAntPoints = fst order `S.insert` aps
+preventCollisions :: World -> [Order] -> [Order]
+preventCollisions w orders = _debug (length orders - M.size orderMap) M.elems orderMap
+  where orderMap = M.fromList $ (\o -> (uncurry (toreMove w) o, o)) <$> orders
 
 updateMystery :: GameState -> GameState
 updateMystery gs = gs { world = exploration <$> w }
