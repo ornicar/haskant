@@ -17,7 +17,6 @@ import           Util
 import           World
 
 type Distance = Int
-type Position = Tile
 type TileSet = S.Set Tile
 type Skip = TileSet
 type Visited = S.Set Tile
@@ -29,9 +28,9 @@ type Path = ((Source, Prev), Tile)
 type Paths = [Path]
 type AntPoints = S.Set Point
 
-bfsMovesTo :: World -> Distance -> [Tile] -> Ants -> Targets
+bfsMovesTo :: World -> Distance -> [Tile] -> [Point] -> Targets
 bfsMovesTo w d sources ants = bfsMovesToAll w d S.empty makePaths makeAntPoints
-  where makeAntPoints = S.fromList $ (\(Ant p _) -> p) <$> ants
+  where makeAntPoints = S.fromList ants
         makePaths = (\s -> ((point s,point s),s)) <$> sources
 
 bfsMovesToAll :: World -> Distance -> Visited -> Paths -> AntPoints -> Targets

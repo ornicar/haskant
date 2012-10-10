@@ -9,7 +9,7 @@ Cabal-Version:      >=1.8
 library
   exposed-modules:  Ants, Protocol, Search, Ai, Tore, World, Util
   hs-source-dirs:   src .
-  ghc-options:      -O2 -Wall
+  ghc-options:      -O2 -Wall -fno-warn-type-defaults -fno-warn-missing-signatures
   ghc-prof-options: -prof -caf-all -auto-all
   build-depends:    base >= 4,
                     containers >= 0.4,

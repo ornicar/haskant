@@ -47,7 +47,6 @@ enumerate :: (Enum a, Bounded a) => [a]
 enumerate = [minBound .. maxBound]
 
 type Color = String
-transparency = "0.3"
 green = "0 120 0"
 blue = "0 0 120"
 red = "120 0 0"

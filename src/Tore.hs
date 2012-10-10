@@ -4,11 +4,14 @@ module Tore
   , Point
   , Points
   , Bound
+  , Direction (..)
   , row
   , col
   , toreBound
   , (%!)
   , (%!%)
+  , move
+  , toreMove
   , pointNeighbors
   , manhattan
   , euclidSquare
@@ -26,6 +29,14 @@ type Points = [Point]
 type Bound = Point
 type Tore a = Array Point a
 
+data Direction = North | East | South | West deriving (Bounded, Eq, Enum)
+
+instance Show Direction where
+  show North = "N"
+  show East  = "E"
+  show South = "S"
+  show West  = "W"
+
 row :: Point -> Row
 row = fst
 
@@ -37,20 +48,28 @@ toreBound = snd . bounds
 
 -- Takes the modulus of the indices before accessing the array
 (%!) :: Tore a -> Point -> a
-(%!) w p = w ! (w %!% p)
+(%!) t p = t ! (toreBound t %!% p)
 
-(%!%) :: Tore a -> Point -> Point
-(%!%) w p = (ixRow, ixCol)
-  where colBound = col . toreBound
-        rowBound = row . toreBound
-        modCol = 1 + colBound w
-        modRow = 1 + rowBound w
+(%!%) :: Bound -> Point -> Point
+(%!%) bound p = (ixRow, ixCol)
+  where modCol = 1 + col bound
+        modRow = 1 + row bound
         ixCol  = col p `mod` modCol
         ixRow  = row p `mod` modRow
+ 
+move :: Point -> Direction -> Point
+move p dir
+  | dir == North = (row p - 1, col p)
+  | dir == South = (row p + 1, col p)
+  | dir == West  = (row p, col p - 1)
+  | otherwise    = (row p, col p + 1)
+
+toreMove :: Tore a -> Point -> Direction -> Point
+toreMove tore p dir = toreBound tore %!% move p dir
 
 pointNeighbors :: Tore a -> Point -> S.Set Point
-pointNeighbors w (r,c) = S.fromList pointList
-  where pointList = (w %!%) <$> [(r - 1, c), (r, c - 1), (r + 1, c), (r, c + 1)]
+pointNeighbors t (r,c) = S.fromList pointList
+  where pointList = (toreBound t %!%) <$> [(r - 1, c), (r, c - 1), (r + 1, c), (r, c + 1)]
 
 modDistance :: Int -> Int -> Int -> Int
 modDistance n x y = min ((x - y) `mod` n) ((y - x) `mod` n)

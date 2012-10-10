@@ -16,6 +16,6 @@ cabal build
   "/home/thib/haskant/dist/build/MyBot/MyBot" \
   "python tools/sample_bots/python/LeftyBot.py" \
   "python tools/sample_bots/python/HunterBot.py" \
-  "python tools/sample_bots/python/GreedyBot.py" 
+  "python tools/sample_bots/python/RandomBot.py" 
 
   # --nolaunch \

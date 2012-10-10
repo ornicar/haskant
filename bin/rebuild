@@ -1,4 +1,4 @@
 #!/bin/sh
 
-cabal configure && cabal build
+cabal clean && cabal configure && cabal build
 # cabal configure --enable-executable-profiling --enable-library-profiling && cabal build

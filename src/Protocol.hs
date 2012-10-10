@@ -34,9 +34,9 @@ data GameParams = GameParams
   } deriving (Show)
 
 issueOrder :: Order -> String
-issueOrder (ant, dir) = "o " ++ srow ++ " " ++ scol ++ " " ++ sdir
-    where srow = (show . row . antPoint) ant
-          scol = (show . col . antPoint) ant
+issueOrder (p, dir) = "o " ++ srow ++ " " ++ scol ++ " " ++ sdir
+    where srow = (show . row) p
+          scol = (show . col) p
           sdir = show dir
 
 createParams :: [(String, String)] -> GameParams
@@ -87,7 +87,7 @@ addFood gs p = gs {world = newWorld, gameFoods = p:gameFoods gs}
 
 addAnt :: GameState -> Owner -> Point -> GameState
 addAnt gs own p = GameState {world = newWorld, gameAnts = newAnts, gameFoods = gameFoods gs}
-  where newAnts   = Ant p own : gameAnts gs
+  where newAnts   = (p, own) : gameAnts gs
         tile = world gs %! p
         newTile = tile {content = if own == Me then Mine else His}
         newWorld  = updateWorldTile (world gs) newTile p

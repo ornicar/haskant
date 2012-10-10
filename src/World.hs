@@ -1,24 +1,22 @@
 module World
   (
     Owner (..)
-  , Ant (..)
-  , Direction (..)
+  , Ant 
   , World
   , Tile (..)
 	, Content (..)
   , Order
+  , Mission
   , Move
   , Ants
   , Orders
   , Tiles
-  , myAnts -- return list of my Ants
-  , hisAnts -- return list of visible enemy Ants
+  , myAnts 
+  , hisAnts 
 	, isAnt
   , isMine
   , isOpen
-  , antPoint
   , antTile
-	, move
   , moveOpen
   , moveToOrder
   , directions
@@ -50,19 +48,10 @@ type World = Tore Tile
 
 data Owner = Me | Him deriving (Show,Eq,Bounded,Enum)
 
-data Ant = Ant Point Owner deriving (Show)
+type Ant = (Point, Owner)
 
-instance Eq Ant where Ant a _ == Ant b _ = a == b
-
-data Direction = North | East | South | West deriving (Bounded, Eq, Enum)
-
-instance Show Direction where
-  show North = "N"
-  show East  = "E"
-  show South = "S"
-  show West  = "W"
-
-type Order = (Ant, Direction)
+type Order = (Point, Direction) -- ant, direction
+type Mission = (Point, Point) -- ant, target
 type Move = (Point, Point)
 type Ants = [Ant]
 type Orders = [Order]
@@ -72,7 +61,7 @@ directions :: [Direction]
 directions = enumerate
 
 moveToOrder :: Move -> Order
-moveToOrder (p@(r1, c1), (r2, c2)) = (Ant p Me, dir)
+moveToOrder (p@(r1, c1), (r2, c2)) = (p, dir)
   where dir = if r1 == r2 then sameRow else sameCol
         sameRow
             | c1 == c2 - 1 = East
@@ -89,12 +78,6 @@ tileNeighbors w t = S.mapMonotonic (w !) $ pointNeighbors w (point t)
 tileOpenNeighbors :: World -> Tile -> S.Set Tile
 tileOpenNeighbors w t = S.filter (isOpen . content) $ tileNeighbors w t
 
-antPoint :: Ant -> Point
-antPoint (Ant p _) = p
-
-antTile :: World -> Ant -> Tile
-antTile w a = w ! antPoint a
-
 isAnt :: Content -> Bool
 isAnt c = c `elem` [Mine, His]
 
@@ -105,7 +88,7 @@ _oneNorm :: Point -> Int
 _oneNorm p = row p + col p
 
 isMine :: Ant -> Bool
-isMine (Ant _ owner) = owner == Me
+isMine = (== Me) . snd
 
 myAnts :: [Ant] -> [Ant]
 myAnts = filter isMine
@@ -116,12 +99,8 @@ isHis = not . isMine
 hisAnts :: [Ant] -> [Ant]
 hisAnts = filter isHis
 
-move :: Point -> Direction -> Point
-move p dir
-  | dir == North = (row p - 1, col p)
-  | dir == South = (row p + 1, col p)
-  | dir == West  = (row p, col p - 1)
-  | otherwise    = (row p, col p + 1)
+antTile :: World -> Ant -> Tile
+antTile w a = w %! fst a
 
 moveOpen :: World -> Tile -> Direction -> Maybe Tile
 moveOpen w tile dir = if (isOpen . content) t2 then Just t2 else Nothing
