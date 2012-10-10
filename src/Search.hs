@@ -1,7 +1,7 @@
 module Search(
     bfsTilesFrom
   , bfsTilesFroms
-  , bfsMysteriousDir
+  , bfsAttractiveDir
   , bfsBorders
   , bfsMovesTo
 ) where
@@ -81,19 +81,22 @@ bfsTilesFrom w dist tile = snd bfsResult
 bfsStep :: World -> Skip -> Tile -> TileSet
 bfsStep w skip tile = S.difference (tileOpenNeighbors w tile) skip
 
-bfsMysteriousDir :: World -> Distance -> Tile -> Maybe Direction
-bfsMysteriousDir w d t = listToMaybe mysteriousDirs 
+bfsAttractiveDir :: World -> Distance -> Tile -> Maybe Direction
+bfsAttractiveDir w d t = listToMaybe mysteriousDirs <|> listToMaybe openDirs
   where dirInfos = bfsDirInfos w d t
-        mysteriousDirs = fst <$> filter ((> 0) . snd) sortedDirMysteries
-        sortedDirMysteries = sortWith (negate . snd) dirInfos
+        dirInfosDir (dir, _, _) = dir
+        mysteriousDirs = dirInfosDir <$> filter (\(_, m, _) -> m > 0) sortedDirMysteries
+        sortedDirMysteries = sortWith (\(_, m, _) -> -m) dirInfos
+        openDirs = dirInfosDir <$> sortWith (\(_, _, o) -> -o) dirInfos
 
--- mystery average of a direction
-type DirInfo = (Direction, Double)
+-- mystery average and number of open border tiles
+type DirInfo = (Direction, Double, Int)
 
 bfsDirInfos :: World -> Distance -> Tile -> [DirInfo]
 bfsDirInfos w d t = dirInfos <$> bfsDirBorders w d t
-  where dirInfos (dir, tileSet) = (dir, averageMystery)
+  where dirInfos (dir, tileSet) = (dir, averageMystery, openess)
           where averageMystery = average $ (fromIntegral . mystery) <$> S.toList tileSet
+                openess = S.size tileSet
 
 type DirTiles = (Direction, TileSet)
 type BfsState = ([DirTiles], TileSet)

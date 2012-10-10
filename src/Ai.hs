@@ -34,13 +34,13 @@ doTurn gs = return (ngs, preventCollisions (world ngs) allOrders)
 
 explore :: World -> [Point] -> [Order]
 explore w ants = catMaybes $ exploreAnt <$> ants
-  where exploreAnt a = (,) a <$> bfsMysteriousDir w exploreDist (w %! a)
+  where exploreAnt a = (,) a <$> bfsAttractiveDir w exploreDist (w %! a)
 
 collectFoods :: World -> [Tile] -> [Point] -> [(Move, Point)]
 collectFoods w = bfsMovesTo w foodDist
 
 preventCollisions :: World -> [Order] -> [Order]
-preventCollisions w orders = M.elems orderMap
+preventCollisions w orders = _debug (length orders - M.size orderMap) M.elems orderMap
   where orderMap = M.fromList $ (\o -> (uncurry (toreMove w) o, o)) <$> orders
 
 updateMystery :: GameState -> GameState
