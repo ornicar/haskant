@@ -2,19 +2,21 @@ module Search(
     bfsTilesFrom
   , bfsTilesFroms
   , bfsAttractiveDir
+  , bfsMysteriousDir
   , bfsBorders
   , bfsMovesTo
 ) where
 
 import           Control.Applicative
-import           Control.Arrow       ((***))
-import           Data.List           (find)
-import           Data.Maybe          (listToMaybe)
-import qualified Data.Set            as S
-import           GHC.Exts            (sortWith)
+import           Control.Arrow             ((***))
+import           Data.List                 (find)
+import           Data.Maybe                (listToMaybe)
+import qualified Data.Set                  as S
+import           GHC.Exts                  (sortWith)
+import           World
+
 import           Tore
 import           Util
-import           World
 
 type Distance = Int
 type TileSet = S.Set Tile
@@ -27,6 +29,15 @@ type Targets = [Target]
 type Path = ((Source, Prev), Tile)
 type Paths = [Path]
 type AntPoints = S.Set Point
+
+-- bfsTerritory :: World -> Distance -> Ants -> Territory
+-- bfsTerritory _ _ [] = M.empty
+-- bfsTerritory w dist ants = expandTerritory w dist territory
+--   where territory = mapM_ enQ 
+
+-- expandTerritory :: World -> Int -> Territory -> Territory
+-- -- doTerritory = _ 0 -> _ 
+-- expandTerritory = undefined
 
 bfsMovesTo :: World -> Distance -> [Tile] -> [Point] -> Targets
 bfsMovesTo w d sources ants = bfsMovesToAll w d S.empty makePaths makeAntPoints
@@ -81,20 +92,24 @@ bfsTilesFrom w dist tile = snd bfsResult
 bfsStep :: World -> Skip -> Tile -> TileSet
 bfsStep w skip tile = S.difference (tileOpenNeighbors w tile) skip
 
+-- mystery average and number of open border tiles
+type DirInfo = (Direction, (Double, Int))
+
+bfsMysteriousDir :: World -> Distance -> Tile -> Maybe Direction
+bfsMysteriousDir w d t = listToMaybe mysteriousDirs
+  where mysteriousDirs = fst <$> sortWith (negate . fst . snd) dirMysteries
+        dirMysteries = filter ((> 0) . fst . snd) $ bfsDirInfos w d t
+
 bfsAttractiveDir :: World -> Distance -> Tile -> Maybe Direction
 bfsAttractiveDir w d t = listToMaybe mysteriousDirs <|> listToMaybe openDirs
   where dirInfos = bfsDirInfos w d t
-        dirInfosDir (dir, _, _) = dir
-        mysteriousDirs = dirInfosDir <$> filter (\(_, m, _) -> m > 0) sortedDirMysteries
-        sortedDirMysteries = sortWith (\(_, m, _) -> -m) dirInfos
-        openDirs = dirInfosDir <$> sortWith (\(_, _, o) -> -o) dirInfos
-
--- mystery average and number of open border tiles
-type DirInfo = (Direction, Double, Int)
+        mysteriousDirs = fst <$> sortWith (negate . fst . snd) dirMysteries
+        dirMysteries = filter ((> 0) . fst . snd) dirInfos
+        openDirs = fst <$> sortWith (negate . snd . snd) dirInfos
 
 bfsDirInfos :: World -> Distance -> Tile -> [DirInfo]
 bfsDirInfos w d t = dirInfos <$> bfsDirBorders w d t
-  where dirInfos (dir, tileSet) = (dir, averageMystery, openess)
+  where dirInfos (dir, tileSet) = (dir, (averageMystery, openess))
           where averageMystery = average $ (fromIntegral . mystery) <$> S.toList tileSet
                 openess = S.size tileSet
 

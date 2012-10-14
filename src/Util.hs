@@ -11,6 +11,8 @@ module Util(
   , drawDir
   , fOr
   , tuplify2
+  , mapFst
+  , mapSnd
   , enumerate
   , _debug
   , _debugIt
@@ -30,6 +32,12 @@ fOr x = any ($x)
 tuplify2 :: [a] -> Maybe (a,a)
 tuplify2 [x,y] = Just (x,y)
 tuplify2 _ = Nothing
+
+mapFst :: (a -> c) -> (a, b) -> (c, b)
+mapFst f (a, b) = (f a, b)
+
+mapSnd :: (b -> c) -> (a, b) -> (a, c)
+mapSnd f (a, b) = (a, f b)
 
 _debug :: Show a => a -> b -> b
 _debug a = trace (show a)

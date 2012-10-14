@@ -11,10 +11,9 @@ module World
   , Ants
   , Orders
   , Tiles
-  , myAnts 
-  , hisAnts 
 	, isAnt
   , isMine
+  , isHis
   , isOpen
   , antTile
   , moveOpen
@@ -84,20 +83,11 @@ isAnt c = c `elem` [Mine, His]
 isOpen :: Content -> Bool
 isOpen c = c /= Water
 
-_oneNorm :: Point -> Int
-_oneNorm p = row p + col p
-
 isMine :: Ant -> Bool
 isMine = (== Me) . snd
 
-myAnts :: [Ant] -> [Ant]
-myAnts = filter isMine
-
 isHis :: Ant -> Bool
 isHis = not . isMine
-
-hisAnts :: [Ant] -> [Ant]
-hisAnts = filter isHis
 
 antTile :: World -> Ant -> Tile
 antTile w a = w %! fst a

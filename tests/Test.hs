@@ -1,10 +1,10 @@
 import           Test.Framework                 (defaultMain, testGroup)
 import           Test.Framework.Providers.HUnit (testCase)
 
-import AiTest
+import QueueTest
 
 tests = [
-    testGroup "Ai" $ zipWith (testCase . show) [1 ..] aiTests
+    testGroup "Queue" $ zipWith (testCase . show) [1 ..] queueTests
   ]
 
 --------------------------------------------------
