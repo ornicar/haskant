@@ -10,6 +10,7 @@ import           Data.Maybe          (catMaybes)
 import qualified Data.Set            as S
 
 import           Control.Monad       (join)
+import           Point
 import           Protocol
 import           Search
 import           Tore

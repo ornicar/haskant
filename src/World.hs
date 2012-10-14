@@ -1,7 +1,6 @@
-module World
-  (
+module World (
     Owner (..)
-  , Ant 
+  , Ant
   , World
   , Tile (..)
 	, Content (..)
@@ -29,16 +28,17 @@ module World
 
 import           Control.Applicative
 import           Data.Array
-import qualified Data.Set as S
 
+import           Point
 import           Tore
 import           Util
 
 -- Objects appearing on the map
 data Content = Mine | His | Land | Food | Water deriving (Show,Eq,Enum,Bounded)
 
-data Tile = Tile { point :: Point, content :: Content, mystery :: Int }
+data Tile = Tile { tilePoint :: Point, content :: Content, mystery :: Int }
 
+instance Pointed Tile where point = tilePoint
 instance Eq Tile where a == b = point a == point b
 instance Show Tile where show a = (show . point) a ++ "{" ++ (show . content) a ++ "}"
 instance Ord Tile where compare a b = compare (point a) (point b)
@@ -71,11 +71,11 @@ moveToOrder (p@(r1, c1), (r2, c2)) = (p, dir)
             | r1 == r2 + 1 = North
             | otherwise = if r1 == 0 then North else South
 
-tileNeighbors :: World -> Tile -> S.Set Tile
-tileNeighbors w t = S.mapMonotonic (w !) $ pointNeighbors w (point t)
+tileNeighbors :: Pointed p => World -> p -> [Tile]
+tileNeighbors w p = (w !) <$> pointNeighbors w p
 
-tileOpenNeighbors :: World -> Tile -> S.Set Tile
-tileOpenNeighbors w t = S.filter (isOpen . content) $ tileNeighbors w t
+tileOpenNeighbors :: Pointed p => World -> p -> [Tile]
+tileOpenNeighbors w p = filter (isOpen . content) $ tileNeighbors w p
 
 isAnt :: Content -> Bool
 isAnt c = c `elem` [Mine, His]

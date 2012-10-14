@@ -19,10 +19,10 @@ enque x (Q [] _ _ f) = Q [x] [] (S.singleton $ f x) f
 enque x q@(Q as zs set f) | f x `S.member` set = q
                           | otherwise = Q as (x:zs) (S.insert (f x) set) f
 
-deque :: Ord t => Q e t -> (Maybe e, Q e t)
-deque (Q [] _ set f) = (Nothing, Q [] [] set f)
-deque (Q (a:as) zs set f) | null as = (Just a, Q (reverse zs) [] set f)
-                          | otherwise = (Just a, Q as zs set f)
+deque :: Ord t => Q e t -> Maybe (e, Q e t)
+deque (Q [] _ _ _) = Nothing
+deque (Q (a:as) zs set f) | null as = Just (a, Q (reverse zs) [] set f)
+                          | otherwise = Just (a, Q as zs set f)
 
 empty :: Ord t => (e -> t) -> Q e t
 empty = Q [] [] S.empty

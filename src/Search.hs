@@ -13,9 +13,10 @@ import           Data.List           (find)
 import           Data.Maybe          (listToMaybe)
 import qualified Data.Set            as S
 import           GHC.Exts            (sortWith)
-import           World
 
-import           SetQueue
+import World
+import           Point
+import qualified SetQueue            as Q
 import           Tore
 import           Util
 
@@ -31,14 +32,19 @@ type Path = ((Source, Prev), Tile)
 type Paths = [Path]
 type AntPoints = S.Set Point
 
--- bfsTerritory :: World -> Distance -> Ants -> Territory
--- bfsTerritory _ _ [] = M.empty
--- bfsTerritory w dist ants = expandTerritory w dist territory
---   where territory = mapM_ enQ
+type Territory = Q.Q (Point, Bool) Point
 
--- expandTerritory :: World -> Int -> Territory -> Territory
--- -- doTerritory = _ 0 -> _
--- expandTerritory = undefined
+bfsTerritory :: World -> Distance -> Ants -> Territory
+bfsTerritory _ _ [] = Q.empty fst
+bfsTerritory w dist ants = expandTerritory w dist territory
+  where territory = Q.fromList fst (mapSnd (== Me) <$> ants)
+
+expandTerritory :: World -> Int -> Territory -> Territory
+expandTerritory _ 0 t = t
+expandTerritory w d q = maybe q withTile $ Q.deque q
+  where withTile ((p, me), nq) = foldl (flip Q.enque) nq ownedNeighbors
+          where ownedNeighbors :: [(Point, Bool)]
+                ownedNeighbors = (\t -> (point t, me)) <$> tileOpenNeighbors w p
 
 bfsMovesTo :: World -> Distance -> [Tile] -> [Point] -> Targets
 bfsMovesTo w d sources ants = bfsMovesToAll w d S.empty makePaths makeAntPoints
@@ -60,7 +66,7 @@ bfsMovesToAll w dist visited paths ants | S.null ants = []
         visitPaths (vis, pp) = foldl visitPath (vis, []) pp
         visitPath :: (Visited, Paths) -> Path -> (Visited, Paths)
         visitPath (vis, pp) path = (vis `S.union` newTiles, nps ++ pp)
-          where newTiles = tileOpenNeighbors w (snd path) `S.difference` vis
+          where newTiles = S.fromList (tileOpenNeighbors w (snd path)) `S.difference` vis
                 nps = newPath <$> S.toList newTiles
                 newPath tile = ((fst *** point) path, tile)
 
@@ -91,7 +97,7 @@ bfsTilesFrom w dist tile = snd bfsResult
 
 -- gets the walkable direct neighbors and the updated visited set
 bfsStep :: World -> Skip -> Tile -> TileSet
-bfsStep w skip tile = S.difference (tileOpenNeighbors w tile) skip
+bfsStep w skip tile = S.difference (S.fromList (tileOpenNeighbors w tile)) skip
 
 -- mystery average and number of open border tiles
 type DirInfo = (Direction, (Double, Int))
