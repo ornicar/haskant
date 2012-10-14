@@ -3,8 +3,8 @@ module SetQueue
      , empty
      , enque
      , deque
-     , listToQueue
-     , queueToList
+     , fromList
+     , toList
      , len
      ) where
 
@@ -30,11 +30,11 @@ deque    (Q n (a:as) zs)
          |  otherwise     =   ( Just a   ,  Q (n-1) as   zs  )
             where as'     = reverse zs
 
-listToQueue :: [e] -> Q e
-listToQueue as = Q (genericLength as) as []
+fromList :: [e] -> Q e
+fromList as = Q (genericLength as) as []
 
-queueToList :: Q e -> [e]
-queueToList (Q _ as zs) = as ++ reverse zs
+toList :: Q e -> [e]
+toList (Q _ as zs) = as ++ reverse zs
 
 len :: Q e -> Word
 len (Q l _ _) = l
