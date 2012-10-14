@@ -1,0 +1,10 @@
+!_TAG_FILE_SORTED	1	~
+Q	SetQueue.hs	18 ;" t
+SetQueue	SetQueue.hs	3 ;" m
+deque	SetQueue.hs	29 ;" f
+empty	SetQueue.hs	36 ;" f
+enque	SetQueue.hs	25 ;" f
+fromList	SetQueue.hs	42 ;" f
+getSet	SetQueue.hs	39 ;" f
+len	SetQueue.hs	48 ;" f
+toList	SetQueue.hs	45 ;" f

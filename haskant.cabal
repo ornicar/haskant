@@ -28,6 +28,7 @@ test-suite tests
   hs-source-dirs:   tests
   ghc-options:      -fno-warn-missing-signatures
   build-depends:    base, 
+                    containers,
                     QuickCheck, 
                     HUnit, 
                     test-framework, 

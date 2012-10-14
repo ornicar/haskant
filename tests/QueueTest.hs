@@ -6,17 +6,21 @@ import           Test.Framework.Providers.HUnit
 import           Test.Framework.Providers.QuickCheck2 (testProperty)
 import           Test.HUnit
 
+import qualified Data.Set                             as S
 import qualified SetQueue                             as Q
 
 queueTests = [
     testProperty "list to queue to list" prop1,
     testCase "empty queue" test1,
     testProperty "enque" prop2,
-    testProperty "deque" prop3
+    testProperty "deque" prop3,
+    testProperty "queue set" prop4
   ]
 
+type Que = Q.Q Int String
+
 prop1 :: [Int] -> Bool
-prop1 xs = (Q.toList . Q.fromList) xs == xs
+prop1 xs = (Q.toList . Q.fromList show) xs == xs
 
 prop2 :: [Int] -> Bool
 prop2 xs = Q.toList queue == xs
@@ -29,7 +33,10 @@ prop3 xs = dequeAll queue == xs
           (Just x, nq) -> x : dequeAll nq
           (_, _) -> []
 
+prop4 :: [Int] -> Bool
+prop4 xs = (Q.getSet . Q.fromList show) xs == S.fromList (map show xs)
+
 test1 = Q.toList emptyQueue @=? []
 
-emptyQueue :: Q.Q Int
-emptyQueue = Q.empty
+emptyQueue :: Que
+emptyQueue = Q.empty show

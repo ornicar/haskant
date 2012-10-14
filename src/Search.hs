@@ -8,13 +8,14 @@ module Search(
 ) where
 
 import           Control.Applicative
-import           Control.Arrow             ((***))
-import           Data.List                 (find)
-import           Data.Maybe                (listToMaybe)
-import qualified Data.Set                  as S
-import           GHC.Exts                  (sortWith)
+import           Control.Arrow       ((***))
+import           Data.List           (find)
+import           Data.Maybe          (listToMaybe)
+import qualified Data.Set            as S
+import           GHC.Exts            (sortWith)
 import           World
 
+import           SetQueue
 import           Tore
 import           Util
 
@@ -33,10 +34,10 @@ type AntPoints = S.Set Point
 -- bfsTerritory :: World -> Distance -> Ants -> Territory
 -- bfsTerritory _ _ [] = M.empty
 -- bfsTerritory w dist ants = expandTerritory w dist territory
---   where territory = mapM_ enQ 
+--   where territory = mapM_ enQ
 
 -- expandTerritory :: World -> Int -> Territory -> Territory
--- -- doTerritory = _ 0 -> _ 
+-- -- doTerritory = _ 0 -> _
 -- expandTerritory = undefined
 
 bfsMovesTo :: World -> Distance -> [Tile] -> [Point] -> Targets

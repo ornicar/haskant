@@ -1,38 +1,56 @@
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+
 module SetQueue
-     ( Q()
+     ( Q
      , empty
      , enque
      , deque
      , fromList
      , toList
      , len
+     , getSet
      ) where
 
 import           Data.List
 import qualified Data.Set     as S
 import           Data.Word
+import Control.Newtype
 
-data Q e = Q !Word [e] [e] (S.Set e)
+data Q e t = Q !Word [e] [e] (S.Set t) (e -> t)
 
-empty :: Ord e => Q e
-empty =  Q 0 [] [] S.empty
+newtype Flip f x y = Flip (f y x)
 
-enque :: Ord e => e -> Q e -> Q e
-enque z  (Q _ [] _ _)    = Q 1 [z] [] (S.singleton z)
-enque z  (Q n as zs set) = Q (n+1) as (z:zs) (S.insert z set)
+instance Newtype (Flip f x y) (f y x) where
+  pack = Flip
+  unpack (Flip z) = z
 
-deque :: Ord e => Q e -> (Maybe e, Q e)
-deque    (Q _ [] _ _)  =   ( Nothing  ,  Q 0     []   []  S.empty)
-deque    (Q n (a:as) zs set)
-         |  null as       =   ( Just a   ,  Q (n-1) as'  []  (S.delete a set))
-         |  otherwise     =   ( Just a   ,  Q (n-1) as   zs  (S.delete a set))
-            where as'     = reverse zs
+instance Ord t => Monad (Flip Q t) where 
+  return x = empty (\_ -> x)
+  (Q _ [] _ _ f) >>= k = empty f
+  q >>= k = fromList $ concat $ map (toList . k) toList q 
 
-fromList :: Ord e => [e] -> Q e
-fromList as = Q (genericLength as) as [] (S.fromList as)
+enque :: Ord t => e -> Q e t -> Q e t
+enque x (Q _ [] _ _ f) = Q 1 [x] [] (S.singleton $ f x) f
+enque x (Q n as zs set f) = Q (n+1) as (x:zs) (S.insert (f x) set) f
 
-toList :: Q e -> [e]
-toList (Q _ as zs _) = as ++ reverse zs
+deque :: Ord t => Q e t -> (Maybe e, Q e t)
+deque (Q _ [] _ set f) = (Nothing, Q 0 [] [] set f)
+deque (Q n (a:as) zs set f)
+        | null as     = (Just a, Q (n-1) as' [] set f)
+        | otherwise   = (Just a, Q (n-1) as zs set f)
+            where as' = reverse zs
 
-len :: Q e -> Word
-len (Q l _ _ _) = l
+empty :: Ord t => (e -> t) -> Q e t
+empty = Q 0 [] [] S.empty 
+
+getSet :: Ord t => Q e t -> S.Set t
+getSet (Q _ _ _ set _) = set
+
+fromList :: Ord t => (e -> t) -> [e] -> Q e t
+fromList f as = Q (genericLength as) as [] (S.fromList $ map f as) f
+
+toList :: Q e t -> [e]
+toList (Q _ as zs _ _) = as ++ reverse zs
+
+len :: Q e t -> Word
+len (Q l _ _ _ _) = l
