@@ -2,6 +2,8 @@
 
 turns=${1:-3}
 
+map=tools/maps/maze/maze_p04_33.map
+
 cabal build 
 
 ./vistools/playgame.py \
@@ -12,7 +14,7 @@ cabal build
   --log_error \
   --log_stderr \
   --turns $turns \
-  --map_file tools/maps/maze/maze_04p_01.map \
+  --map_file $map \
   "/home/thib/haskant/dist/build/MyBot/MyBot" \
   "python tools/sample_bots/python/LeftyBot.py" \
   "python tools/sample_bots/python/HunterBot.py" \

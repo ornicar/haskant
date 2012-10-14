@@ -21,12 +21,15 @@ type DoTurn = GameState -> IO (GameState, [Order])
 
 exploreDist = 7
 foodDist = 8
--- areaDist = 15
+areaDist = 14
 
 doTurn :: DoTurn
-doTurn gs = return (ngs, preventCollisions (world ngs) allOrders)
+doTurn gs = do
+    mapM_ putStrLn $ _showPoints territory green
+    return (ngs, preventCollisions (world ngs) allOrders)
   where ngs = updateMystery gs
         w = world ngs
+        territory = bfsTerritory w areaDist $ gameAnts ngs
         myAntPoints = fst <$> isMine `filter` gameAnts ngs
         allOrders = foodOrders ++ exploreOrders
         foodTargets = collectFoods w ((w %!) <$> gameFoods ngs) myAntPoints
@@ -65,3 +68,6 @@ _showBorders gs dir color = fillColor color : showTiles
         borderTiles = join $ bfsBorders w exploreDist dir <$> antTiles
         showTiles = showTile <$> borderTiles
         showTile = drawPoint . point
+
+_showPoints :: [Point] -> String -> [String]
+_showPoints points color = fillColor color : (drawPoint <$> points)

@@ -5,6 +5,7 @@ module Search(
   , bfsMysteriousDir
   , bfsBorders
   , bfsMovesTo
+  , bfsTerritory
 ) where
 
 import           Control.Applicative
@@ -32,19 +33,17 @@ type Path = ((Source, Prev), Tile)
 type Paths = [Path]
 type AntPoints = S.Set Point
 
-type Territory = Q.Q (Point, Bool) Point
-
-bfsTerritory :: World -> Distance -> Ants -> Territory
-bfsTerritory _ _ [] = Q.empty fst
-bfsTerritory w dist ants = expandTerritory w dist territory
-  where territory = Q.fromList fst (mapSnd (== Me) <$> ants)
-
-expandTerritory :: World -> Int -> Territory -> Territory
-expandTerritory _ 0 t = t
-expandTerritory w d q = maybe q withTile $ Q.deque q
-  where withTile ((p, me), nq) = foldl (flip Q.enque) nq ownedNeighbors
-          where ownedNeighbors :: [(Point, Bool)]
-                ownedNeighbors = (\t -> (point t, me)) <$> tileOpenNeighbors w p
+bfsTerritory :: World -> Distance -> Ants -> [Point]
+bfsTerritory _ _ [] = []
+bfsTerritory w dist ants = (fst . fst) <$> filter snd (Q.getAll territory)
+  where from = Q.fromList (fst . fst) (antExplore <$> ants)
+        antExplore (p, o) = ((p, 0), o == Me)
+        territory = expandTerritory from
+        expandTerritory q = maybe q withTile $ Q.deque q
+          where withTile (((p, d), me), nq) = expandTerritory newQueue
+                  where newQueue  | d > dist = nq
+                                  | otherwise = foldl (flip Q.enque) nq ownedNeighbors
+                        ownedNeighbors = (\t -> ((point t, d+1), me)) <$> tileOpenNeighbors w p
 
 bfsMovesTo :: World -> Distance -> [Tile] -> [Point] -> Targets
 bfsMovesTo w d sources ants = bfsMovesToAll w d S.empty makePaths makeAntPoints
