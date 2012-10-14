@@ -2,19 +2,17 @@ module QueueTest(
   queueTests
 ) where
 
-import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Test.Framework.Providers.HUnit
-import Test.HUnit
+import           Test.Framework.Providers.HUnit
+import           Test.Framework.Providers.QuickCheck2 (testProperty)
+import           Test.HUnit
 
-import qualified SetQueue as Q
-import Data.Functor ((<$>))
+import qualified SetQueue                             as Q
 
 queueTests = [
     testProperty "list to queue to list" prop1,
     testCase "empty queue" test1,
     testProperty "enque" prop2,
-    testProperty "deque" prop3,
-    testProperty "functor map" prop4
+    testProperty "deque" prop3
   ]
 
 prop1 :: [Int] -> Bool
@@ -30,10 +28,6 @@ prop3 xs = dequeAll queue == xs
         dequeAll q = case Q.deque q of
           (Just x, nq) -> x : dequeAll nq
           (_, _) -> []
-
-prop4 :: [Int] -> Bool
-prop4 xs = showQueue xs == (show <$> xs)
-  where showQueue = Q.toList . (show <$>) . Q.fromList
 
 test1 = Q.toList emptyQueue @=? []
 
