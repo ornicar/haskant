@@ -13,6 +13,7 @@ module Tore
   , move
   , toreMove
   , pointNeighbors
+  , manhattan
   ) where
 
 import           Control.Applicative
@@ -60,3 +61,13 @@ pointNeighbors t p = (toreBound t %!%) <$> deltas
   where deltas = [(r - 1, c), (r, c - 1), (r + 1, c), (r, c + 1)]
         r = row p
         c = col p
+
+manhattan :: Bound -> Point -> Point -> Int
+manhattan b p1 p2 = rowd + cold
+  where rowd = modDistance (row b) (row p1) (row p2)
+        cold = modDistance (col b) (col p1) (col p2)
+
+modDistance :: Int -- modulus
+            -> Int -> Int -> Int
+modDistance m x y = min a (m - a)
+  where a = abs $ x - y

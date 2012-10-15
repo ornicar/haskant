@@ -12,7 +12,7 @@ library
   hs-source-dirs:   src .
   ghc-options:      -O2 -Wall -fno-warn-type-defaults -fno-warn-missing-signatures
   ghc-prof-options: -prof -caf-all -auto-all
-  build-depends:    base, containers, array
+  build-depends:    base, containers, array, astar
 
 executable MyBot
   default-language: Haskell2010

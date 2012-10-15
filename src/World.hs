@@ -9,6 +9,7 @@ module World (
 	, Content (..)
   , Order
   , Mission
+  , Missions
   , Move
   , Ants
   , Orders
@@ -62,6 +63,7 @@ instance Owned (Point, Owner) where owner = snd
 
 type Order = (Point, Direction) -- ant, direction
 type Mission = (Point, Point) -- ant, target
+type Missions = [Mission]
 type Move = (Point, Point)
 type Ants = [Ant]
 type Orders = [Order]

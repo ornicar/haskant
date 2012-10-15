@@ -38,11 +38,9 @@ type AntPoints = S.Set Point
 bfsClosestInSet :: World -> S.Set Point -> Point -> Maybe Point
 bfsClosestInSet w terSet from | S.null terSet = Nothing
                               | otherwise = explore $ Q.fromList id [from] 
-  where explore :: Q.Q Point Point -> Maybe Point
-        explore q = Q.deque q >>= withPoint
+  where explore q = Q.deque q >>= withPoint
         withPoint (p, nq) = if p `S.member` terSet then Just p else explore newQueue
-          where newQueue = foldl (flip Q.enque) nq neighbors
-                neighbors = pointOpenNeighbors w p
+          where newQueue = Q.enqueMany (pointOpenNeighbors w p) nq
 
 bfsBorderSet :: World -> Distance -> Ants -> S.Set Point
 bfsBorderSet w d ants = isBorder `S.filter` terSet

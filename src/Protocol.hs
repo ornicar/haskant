@@ -23,6 +23,7 @@ data GameState = GameState
   , gameAnts  :: [Ant]
   , gameFoods  :: [Point]
   , gameHills :: [Hill]
+  , gameMissions :: [Mission]
   } deriving (Show)
 
 data GameParams = GameParams
@@ -61,7 +62,7 @@ createParams s =
                 }
 
 initialGameState :: GameParams -> GameState
-initialGameState gp = GameState w [] [] []
+initialGameState gp = GameState w [] [] [] []
   where maxRows = rows gp - 1
         maxCols = cols gp - 1
         w = listArray ((0,0), (maxRows, maxCols)) [Tile (x, y) Land 0 | x <- [0..maxRows], y <- [0..maxCols]]

@@ -2,6 +2,7 @@ module SetQueue
      ( Q
      , empty
      , enque
+     , enqueMany
      , deque
      , fromList
      ) where
@@ -14,6 +15,9 @@ enque :: Ord t => e -> Q e t -> Q e t
 enque x (Q [] _ _ f) = Q [x] [] (S.singleton $ f x) f
 enque x q@(Q as zs set f) | f x `S.member` set = q
                           | otherwise = Q as (x:zs) (S.insert (f x) set) f
+
+enqueMany :: Ord t => [e] -> Q e t -> Q e t
+enqueMany xs q = foldl (flip enque) q xs
 
 deque :: Ord t => Q e t -> Maybe (e, Q e t)
 deque (Q [] _ _ _) = Nothing
