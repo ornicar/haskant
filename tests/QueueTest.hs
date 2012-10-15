@@ -8,7 +8,7 @@ import           Test.HUnit
 
 import           Data.List                            (nub)
 import qualified Data.Set                             as S
-import qualified SetQueue                             as Q
+import qualified MemorySetQueue                       as Q
 
 queueTests = [
     testProperty "list to queue to list" prop1,

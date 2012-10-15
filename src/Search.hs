@@ -3,9 +3,10 @@ module Search(
   , bfsTilesFroms
   , bfsAttractiveDir
   , bfsMysteriousDir
-  , bfsBorders
+  , bfsDirBorders
   , bfsMovesTo
-  , bfsTerritory
+  , bfsBorderSet
+  , bfsClosestInSet
 ) where
 
 import           Control.Applicative
@@ -15,11 +16,12 @@ import           Data.Maybe          (listToMaybe)
 import qualified Data.Set            as S
 import           GHC.Exts            (sortWith)
 
-import World
+import qualified MemorySetQueue      as MemQ
 import           Point
 import qualified SetQueue            as Q
 import           Tore
 import           Util
+import           World
 
 type Distance = Int
 type TileSet = S.Set Tile
@@ -33,17 +35,31 @@ type Path = ((Source, Prev), Tile)
 type Paths = [Path]
 type AntPoints = S.Set Point
 
+bfsClosestInSet :: World -> S.Set Point -> Point -> Maybe Point
+bfsClosestInSet w terSet from | S.null terSet = Nothing
+                              | otherwise = explore $ Q.fromList id [from] 
+  where explore :: Q.Q Point Point -> Maybe Point
+        explore q = Q.deque q >>= withPoint
+        withPoint (p, nq) = if p `S.member` terSet then Just p else explore newQueue
+          where newQueue = foldl (flip Q.enque) nq neighbors
+                neighbors = pointOpenNeighbors w p
+
+bfsBorderSet :: World -> Distance -> Ants -> S.Set Point
+bfsBorderSet w d ants = isBorder `S.filter` terSet
+  where terSet = S.fromList $ bfsTerritory w d ants
+        isBorder p = any (`S.notMember` terSet) (pointOpenNeighbors w p)
+
 bfsTerritory :: World -> Distance -> Ants -> [Point]
 bfsTerritory _ _ [] = []
-bfsTerritory w dist ants = (fst . fst) <$> filter snd (Q.getAll territory)
-  where from = Q.fromList (fst . fst) (antExplore <$> ants)
+bfsTerritory w dist ants = (fst . fst) <$> filter snd (MemQ.getAll territory)
+  where from = MemQ.fromList (fst . fst) (antExplore <$> ants)
         antExplore (p, o) = ((p, 0), o == Me)
         territory = expandTerritory from
-        expandTerritory q = maybe q withTile $ Q.deque q
+        expandTerritory q = maybe q withTile $ MemQ.deque q
           where withTile (((p, d), me), nq) = expandTerritory newQueue
                   where newQueue  | d > dist = nq
-                                  | otherwise = foldl (flip Q.enque) nq ownedNeighbors
-                        ownedNeighbors = (\t -> ((point t, d+1), me)) <$> tileOpenNeighbors w p
+                                  | otherwise = foldl (flip MemQ.enque) nq ownedNeighbors
+                        ownedNeighbors = (\x -> ((x, d+1), me)) <$> pointOpenNeighbors w p
 
 bfsMovesTo :: World -> Distance -> [Tile] -> [Point] -> Targets
 bfsMovesTo w d sources ants = bfsMovesToAll w d S.empty makePaths makeAntPoints
@@ -114,7 +130,7 @@ bfsAttractiveDir w d t = listToMaybe mysteriousDirs <|> listToMaybe openDirs
         openDirs = fst <$> sortWith (negate . snd . snd) dirInfos
 
 bfsDirInfos :: World -> Distance -> Tile -> [DirInfo]
-bfsDirInfos w d t = dirInfos <$> bfsDirBorders w d t
+bfsDirInfos w d t = dirInfos <$> bfsAllDirBorders w d t
   where dirInfos (dir, tileSet) = (dir, (averageMystery, openess))
           where averageMystery = average $ (fromIntegral . mystery) <$> S.toList tileSet
                 openess = S.size tileSet
@@ -122,8 +138,13 @@ bfsDirInfos w d t = dirInfos <$> bfsDirBorders w d t
 type DirTiles = (Direction, TileSet)
 type BfsState = ([DirTiles], TileSet)
 
-bfsDirBorders :: World -> Distance -> Tile -> [DirTiles]
-bfsDirBorders w dist tile = fst bfsResult
+bfsDirBorders :: World -> Distance -> Direction -> Tile -> [Tile]
+bfsDirBorders w d dir t = maybe [] (S.toList . snd) northDirBorders
+  where dirBorders = bfsAllDirBorders w d t
+        northDirBorders = find ((dir ==) . fst) dirBorders
+
+bfsAllDirBorders :: World -> Distance -> Tile -> [DirTiles]
+bfsAllDirBorders w dist tile = fst bfsResult
   where initDirTiles :: [DirTiles]
         initDirTiles  = dirTiles <$> directions
         dirTiles d = (d, maybe S.empty S.singleton (moveOpen w tile d))
@@ -139,8 +160,3 @@ bfsDirBorders w dist tile = fst bfsResult
                 dirNeighbors :: BfsState -> DirTiles -> BfsState
                 dirNeighbors (dns, vis) (dir, froms) = ((dir, ns) : dns, vis `S.union` ns)
                   where ns = S.unions $ bfsStep w vis <$> S.toList froms
-
-bfsBorders :: World -> Distance -> Direction -> Tile -> [Tile]
-bfsBorders w d dir t = maybe [] (S.toList . snd) northDirBorders
-  where dirBorders = bfsDirBorders w d t
-        northDirBorders = find ((dir ==) . fst) dirBorders

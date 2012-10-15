@@ -18,16 +18,12 @@ updateGameFromInput gp gs = do
           | "turn" `isPrefixOf` line = do
               hPutStrLn stderr line
               updateGameFromInput gp gs
-          | "go" `isPrefixOf` line   =
-              return GameState {world = world gs
-                              , gameAnts = gameAnts gs
-                              , gameFoods = gameFoods gs
-                              }
+          | "go" `isPrefixOf` line = return gs
           | otherwise = updateGameFromInput gp $ updateGameState gs line
 
 -- Clears ants and food and sets tiles to invisible
 cleanState :: GameState -> GameState
-cleanState gs = GameState {world = clearTile <$> world gs, gameAnts = [], gameFoods = []}
+cleanState gs = gs {world = clearTile <$> world gs, gameAnts = [], gameFoods = []}
 
 gatherParamInput :: IO [String]
 gatherParamInput = gatherInput' []

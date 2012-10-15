@@ -22,6 +22,7 @@ data GameState = GameState
   { world :: World
   , gameAnts  :: [Ant]
   , gameFoods  :: [Point]
+  , gameHills :: [Hill]
   } deriving (Show)
 
 data GameParams = GameParams
@@ -60,7 +61,7 @@ createParams s =
                 }
 
 initialGameState :: GameParams -> GameState
-initialGameState gp = GameState {world = w, gameAnts = [], gameFoods = []}
+initialGameState gp = GameState w [] [] []
   where maxRows = rows gp - 1
         maxCols = cols gp - 1
         w = listArray ((0,0), (maxRows, maxCols)) [Tile (x, y) Land 0 | x <- [0..maxRows], y <- [0..maxCols]]
@@ -73,6 +74,7 @@ updateGameStateMaybe gs s
   | "f" `isPrefixOf` s = addFood gs <$> toPoint (tail s)
   | "w" `isPrefixOf` s = (updateWorld gs . updateWorldContent (world gs) Water) <$> toPoint (tail s)
   | "a" `isPrefixOf` s = addAnt gs (toOwner . digitToInt . last $ s) <$> (toPoint . init . tail) s
+  | "h" `isPrefixOf` s = addHill gs (toOwner . digitToInt . last $ s) <$> (toPoint . init . tail) s
   | otherwise = Nothing -- ignore line
   where
     toPoint :: String -> Maybe Point
@@ -86,10 +88,17 @@ addFood gs p = gs {world = newWorld, gameFoods = p:gameFoods gs}
         newWorld = updateWorldTile (world gs) (tile {content = Food}) p
 
 addAnt :: GameState -> Owner -> Point -> GameState
-addAnt gs own p = GameState {world = newWorld, gameAnts = newAnts, gameFoods = gameFoods gs}
-  where newAnts   = (p, own) : gameAnts gs
+addAnt gs own p = gs {world = newWorld, gameAnts = newAnts}
+  where newAnts = (p, own) : gameAnts gs
         tile = world gs %! p
         newTile = tile {content = if own == Me then Mine else His}
+        newWorld  = updateWorldTile (world gs) newTile p
+
+addHill :: GameState -> Owner -> Point -> GameState
+addHill gs own p = gs {world = newWorld, gameHills = newHills}
+  where newHills = (p, own) : gameHills gs
+        tile = world gs %! p
+        newTile = tile {content = if own == Me then MyHill else HisHill}
         newWorld  = updateWorldTile (world gs) newTile p
 
 updateWorld :: GameState -> World -> GameState

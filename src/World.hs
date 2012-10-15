@@ -1,6 +1,9 @@
+{-# LANGUAGE TypeSynonymInstances, FlexibleInstances #-}
+
 module World (
     Owner (..)
   , Ant
+  , Hill
   , World
   , Tile (..)
 	, Content (..)
@@ -14,12 +17,13 @@ module World (
   , isMine
   , isHis
   , isOpen
-  , antTile
+  , tileOf
   , moveOpen
   , moveToOrder
   , directions
   , tileNeighbors
   , tileOpenNeighbors
+  , pointOpenNeighbors
 	, updateWorldTile
 	, updateWorldContent
 	, clearTile
@@ -34,7 +38,7 @@ import           Tore
 import           Util
 
 -- Objects appearing on the map
-data Content = Mine | His | Land | Food | Water deriving (Show,Eq,Enum,Bounded)
+data Content = Mine | His | MyHill | HisHill | Land | Food | Water deriving (Show,Eq,Enum,Bounded)
 
 data Tile = Tile { tilePoint :: Point, content :: Content, mystery :: Int }
 
@@ -45,9 +49,16 @@ instance Ord Tile where compare a b = compare (point a) (point b)
 
 type World = Tore Tile
 
-data Owner = Me | Him deriving (Show,Eq,Bounded,Enum)
+data Owner = Me | Him deriving (Show,Eq)
+
+class Owned o where owner :: o -> Owner
 
 type Ant = (Point, Owner)
+
+type Hill = (Point, Owner)
+
+instance Pointed (Point, Owner) where point = fst
+instance Owned (Point, Owner) where owner = snd
 
 type Order = (Point, Direction) -- ant, direction
 type Mission = (Point, Point) -- ant, target
@@ -77,20 +88,23 @@ tileNeighbors w p = (w !) <$> pointNeighbors w p
 tileOpenNeighbors :: Pointed p => World -> p -> [Tile]
 tileOpenNeighbors w p = filter (isOpen . content) $ tileNeighbors w p
 
+pointOpenNeighbors :: Pointed p => World -> p -> [Point]
+pointOpenNeighbors w p = point <$> tileOpenNeighbors w p
+
 isAnt :: Content -> Bool
-isAnt c = c `elem` [Mine, His]
+isAnt c = c == Mine || c == His
 
 isOpen :: Content -> Bool
-isOpen c = c /= Water
+isOpen c = c /= Water && c /= MyHill
 
-isMine :: Ant -> Bool
-isMine = (== Me) . snd
+isMine :: Owned o => o -> Bool
+isMine = (== Me) . owner
 
-isHis :: Ant -> Bool
+isHis :: Owned o => o -> Bool
 isHis = not . isMine
 
-antTile :: World -> Ant -> Tile
-antTile w a = w %! fst a
+tileOf :: Pointed p => World -> p -> Tile
+tileOf w p = w %! point p
 
 moveOpen :: World -> Tile -> Direction -> Maybe Tile
 moveOpen w tile dir = if (isOpen . content) t2 then Just t2 else Nothing
