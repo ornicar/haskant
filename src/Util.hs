@@ -64,7 +64,7 @@ fillColor :: Color -> String
 fillColor = printf "v setFillColor %s 0.3" 
 
 lineColor :: Color -> String
-lineColor = printf "v setLineColor %s 1" 
+lineColor = printf "v setLineColor %s 0.6" 
 
 drawCoords :: Int -> Int -> String
 drawCoords = printf "v tile %d %d"

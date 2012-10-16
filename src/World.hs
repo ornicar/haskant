@@ -25,6 +25,7 @@ module World (
   , tileNeighbors
   , tileOpenNeighbors
   , pointOpenNeighbors
+  , pointIsOpenAndFree
 	, updateWorldTile
 	, updateWorldContent
 	, clearTile
@@ -62,7 +63,7 @@ instance Pointed (Point, Owner) where point = fst
 instance Owned (Point, Owner) where owner = snd
 
 type Order = (Point, Direction) -- ant, direction
-type Mission = (Point, Point) -- ant, target
+type Mission = (Move, Points) -- (from, to), path
 type Missions = [Mission]
 type Move = (Point, Point)
 type Ants = [Ant]
@@ -98,6 +99,9 @@ isAnt c = c == Mine || c == His
 
 isOpen :: Content -> Bool
 isOpen c = c /= Water && c /= MyHill
+
+pointIsOpenAndFree :: Pointed p => World -> p -> Bool
+pointIsOpenAndFree w p = ((`notElem` [Water, MyHill, Mine]) . content) $ w %! p
 
 isMine :: Owned o => o -> Bool
 isMine = (== Me) . owner

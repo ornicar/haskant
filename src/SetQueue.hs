@@ -27,8 +27,5 @@ deque (Q (a:as) zs set f) | null as = Just (a, Q (reverse zs) [] set f)
 empty :: Ord t => (e -> t) -> Q e t
 empty = Q [] [] S.empty
 
-getSet :: Ord t => Q e t -> S.Set t
-getSet (Q _ _ set _) = set
-
 fromList :: Ord t => (e -> t) -> [e] -> Q e t
 fromList f as = Q as [] (S.fromList $ map f as) f

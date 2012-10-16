@@ -4,10 +4,10 @@ module Ai (
 ) where
 
 import           Control.Applicative
-import           Control.Monad       (join, mfilter)
-import           Data.List           ((\\), find)
+import           Control.Monad       (join)
+import           Data.List           ((\\))
 import qualified Data.Map            as M
-import           Data.Maybe          (mapMaybe, listToMaybe)
+import           Data.Maybe          (mapMaybe)
 import qualified Data.Set            as S
 import Data.Graph.AStar
 
@@ -24,9 +24,9 @@ type AntPoints = Points
 
 type Tactic = GameState -> AntPoints -> Orders
 
-exploreDist = 8
+exploreDist = 10
 foodDist = 9
-areaDist = 14
+areaDist = 17
 
 doTurn :: DoTurn
 doTurn gs = do
@@ -38,32 +38,43 @@ doTurn gs = do
         (orders, antPoints) = strategy [foodTactic, exploreTactic] gs2
         (keptMissions, newMissions) = borderMissions gs2 antPoints 
         missions = keptMissions ++ newMissions
-        missionOrders = mapMaybe (missionOrder gs2) missions
+        missionOrders = mapMaybe missionOrder missions
         allOrders = orders ++ missionOrders
         finalOrders = preventCollisions (world gs2) allOrders
-        gs3 = gs2 {gameMissions = updateMissions gs2 missions finalOrders}
+        updatedMissions = updateMissions missions finalOrders
+        gs3 = gs2 {gameMissions = updatedMissions}
 
-missionOrder :: GameState -> Mission -> Maybe Order
-missionOrder gs (from, to) = moveToOrder <$> maybeMove
-  where w = world gs
-        maybeMove = (,) from <$> (next >>= listToMaybe)
-        next = aStar neighbors close (heur to) (== to) from
-          where neighbors = S.fromList . pointOpenNeighbors w
-                close _ _ = 1
-                heur = manhattan (toreBound w)
+missionOrder :: Mission -> Maybe Order
+missionOrder (_, []) = Nothing
+missionOrder ((from, _), next:_) = Just $ moveToOrder (from, next)
 
-updateMissions :: GameState -> Missions -> Orders -> Missions
-updateMissions gs missions orders = updateMission <$> missions
-  where updateMission m@(from, _) = maybe m withOrder $ find ((== from) . fst) orders
-          where withOrder (_, dir) = (from, toreMove (world gs) from dir)
+-- path excludes starting and ending points
+pathTo :: World -> Point -> Point -> Maybe Points
+pathTo w from to = init <$> nextPath
+  where nextPath = aStar neighbors close (heur to) (== to) from
+        neighbors = S.fromList . pointOpenNeighbors w
+        close _ _ = 1
+        heur = manhattan (toreBound w)
+
+updateMissions :: Missions -> Orders -> Missions
+updateMissions missions orders = updateMission <$> missions
+  where updateMission mission@(_, []) = mission
+        updateMission mission@((from, to), next:path) 
+          | any ((== from) . fst) orders = ((next, to), path)
+          | otherwise = mission
 
 borderMissions :: GameState -> AntPoints -> (Missions, Missions)
 borderMissions gs antPoints = (kepts, news)
-  where kepts = mfilter keepMission (gameMissions gs)
-        keepMission (from, _) = from `elem` antPoints
-        freeAps = antPoints \\ (fst <$> kepts)
+  where w = world gs
+        kepts = filter keepMission (gameMissions gs)
+        keepMission (_, []) = False
+        keepMission ((from, to), _) = from `elem` antPoints && pointIsOpenAndFree w to 
+        freeAps = antPoints \\ ((fst . fst) <$> kepts)
         news = mapMaybe (antMission . point) freeAps
-        antMission a = (,) a <$> bfsClosestInSet (world gs) (borderSet gs) a
+        antMission a = do
+          dest <- bfsClosestInSet w (borderSet gs) a
+          path <- pathTo w a dest
+          return ((a, dest), path)
 
 borderSet :: GameState -> S.Set Point
 borderSet gs = bfsBorderSet (world gs) areaDist $ gameAnts gs
@@ -119,4 +130,4 @@ _showPoints points color = fillColor color : (drawPoint <$> points)
 
 _showMissions :: [Mission] -> String -> [String]
 _showMissions missions color = lineColor color : (showMission <$> missions)
-  where showMission (a, b) = drawArrow a b
+  where showMission ((a, b), _) = drawArrow a b
