@@ -1,0 +1,13 @@
+#!/bin/sh
+
+exec /home/thib/haskant/dist/build/MyBot/MyBot +RTS -xc -RTS
+
+# PROG="MyBot"
+# VIEW="open"
+# FLAGS="profiling/data.xml"
+
+# cabal build
+# dist/build/${PROG}/${PROG} ${FLAGS} +RTS  -p -hc -s${PROG}.summary
+# hp2ps ${PROG}.hp
+# # ${VIEW} ${PROG}.ps
+# cat ${PROG}.summary

@@ -17,21 +17,21 @@ library
 executable MyBot
   default-language: Haskell2010
   main-is:          MyBot.hs
-  ghc-options:      -O2 -Wall
-  ghc-prof-options: -prof -caf-all -auto-all
+  ghc-options:      -O2 -Wall 
+  ghc-prof-options: -prof -caf-all -auto-all -fuuuuu
   build-depends:    base, haskant
 
-test-suite tests
-  default-language: Haskell2010
-  type:             exitcode-stdio-1.0
-  main-is:          Tests.hs
-  hs-source-dirs:   tests
-  ghc-options:      -fno-warn-missing-signatures
-  build-depends:    base, 
-                    containers,
-                    QuickCheck, 
-                    HUnit, 
-                    test-framework, 
-                    test-framework-quickcheck2, 
-                    test-framework-hunit, 
-                    haskant
+-- test-suite tests
+--   default-language: Haskell2010
+--   type:             exitcode-stdio-1.0
+--   main-is:          Tests.hs
+--   hs-source-dirs:   tests
+--   ghc-options:      -fno-warn-missing-signatures
+--   build-depends:    base, 
+--                     containers,
+--                     QuickCheck, 
+--                     HUnit, 
+--                     test-framework, 
+--                     test-framework-quickcheck2, 
+--                     test-framework-hunit, 
+--                     haskant

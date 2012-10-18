@@ -1,0 +1,9 @@
+#!/bin/sh
+
+cabal clean 
+cabal configure -p \
+  --enable-library-profiling \
+  --enable-executable-profiling
+
+# --ghc-option==-auto-all -caf-all
+cabal build

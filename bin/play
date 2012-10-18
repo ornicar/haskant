@@ -3,11 +3,20 @@
 turns=${1:-3}
 
 # map=tools/maps/maze/maze_p04_33.map
-map=tools/maps/maze/maze_p04_32.map
-# map=tools/maps/maze/maze_p04_30.map
+# map=tools/maps/maze/maze_p04_32.map
+map=tools/maps/maze/maze_p04_30.map
 # map=tools/maps/maze/maze_04p_01.map
 
-cabal build 
+mybot="/home/thib/haskant/dist/build/MyBot/MyBot" 
+# mybot="/home/thib/haskant/bin/mybot-prof" 
+# mybot="/home/thib/haskant/dist/build/MyBot/MyBot +RTS -xc -RTS"
+# mybot="/home/thib/haskant/dist/build/MyBot/MyBot +RTS -hc -p -RTS"
+
+lefty="python tools/sample_bots/python/LeftyBot.py" 
+hunter="python tools/sample_bots/python/HunterBot.py" 
+random="python tools/sample_bots/python/RandomBot.py" 
+
+# cabal build 
 
 ./vistools/playgame.py \
   --player_seed 42 \
@@ -18,9 +27,6 @@ cabal build
   --log_stderr \
   --turns $turns \
   --map_file $map $2 \
-  "/home/thib/haskant/dist/build/MyBot/MyBot" \
-  "python tools/sample_bots/python/LeftyBot.py" \
-  "python tools/sample_bots/python/HunterBot.py" \
-  "python tools/sample_bots/python/RandomBot.py" 
+  "$mybot" "$lefty" "$hunter" "$mybot"
 
   # --nolaunch \
